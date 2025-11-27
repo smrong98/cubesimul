@@ -253,6 +253,7 @@
       border:1px solid #27272a;
       white-space:pre-wrap;
     }
+
     .tag {
       display:inline-flex;
       align-items:center;
@@ -270,6 +271,29 @@
       height:6px;
       border-radius:999px;
       background:#8CAF0B;
+    }
+
+    /* 로그 헤더 + 토글 버튼 */
+    .log-header-row {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .log-header-row span {
+      font-size:1rem;
+    }
+    .log-toggle-btn {
+      border-radius:999px;
+      border:1px solid #3f3f46;
+      background:#111111;
+      color:#e5e7eb;
+      font-size:0.75rem;
+      padding:2px 8px;
+      cursor:pointer;
+    }
+    .log-toggle-btn:hover {
+      background:#1f1f1f;
     }
 
     #card-settings   { grid-column:1; grid-row:1; }
@@ -414,10 +438,15 @@
       </div>
     </section>
 
-    <!-- 4. 로그 -->
+    <!-- 4. 로그 (토글 가능) -->
     <section class="card" id="card-log">
-      <h2>로그 (최근 100회)</h2>
-      <div id="log"></div>
+      <h2>
+        <div class="log-header-row">
+          <span>로그 (최근 100회)</span>
+          <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
+        </div>
+      </h2>
+      <div id="log" style="display:none;"></div>
     </section>
   </div>
 
@@ -433,6 +462,8 @@
     let rollCount = 0;
     let mesoUsed = 0;
     let logEntries = [];
+
+    let logVisible = false; // 로그 시각화 토글 상태
 
     const poolCache = new Map();
 
@@ -497,6 +528,19 @@
     function updateStatsTags() {
       document.getElementById("rollCountTag").textContent = `재설정 횟수: ${rollCount}`;
       document.getElementById("mesoTag").textContent = `소모 메소: ${formatMesoKorean(mesoUsed)}`;
+    }
+
+    // 로그 표시 토글
+    function updateLogVisibility() {
+      const logDiv = document.getElementById("log");
+      const btn = document.getElementById("toggleLogBtn");
+      if (logVisible) {
+        logDiv.style.display = "block";
+        btn.textContent = "접기";
+      } else {
+        logDiv.style.display = "none";
+        btn.textContent = "펼치기";
+      }
     }
 
     // ============= 비용 테이블 =============
@@ -633,6 +677,7 @@
     }
 
     function appendLogEntry(text) {
+      // 기록은 항상 쌓음 (보이는지 여부와 무관)
       logEntries.unshift(text);
       if (logEntries.length > 100) logEntries.pop();
       document.getElementById("log").textContent = logEntries.join("\n");
@@ -705,7 +750,6 @@
       const candBox = document.getElementById(boxId);
       const currentBox = document.getElementById("box-current");
 
-      // 후보 카드 페이드아웃
       candBox.classList.remove("fade-out-card");
       void candBox.offsetWidth;
       candBox.classList.add("fade-out-card");
@@ -713,11 +757,9 @@
       candBox.addEventListener("animationend", () => {
         candBox.classList.remove("fade-out-card");
 
-        // 현재 옵션 갱신
         currentLines = cand.map(l => ({...l}));
         renderAllBoxes();
 
-        // 현재 카드 페이드인
         currentBox.classList.remove("fade-in-card");
         void currentBox.offsetWidth;
         currentBox.classList.add("fade-in-card");
@@ -756,6 +798,15 @@
     document.getElementById("partsType").addEventListener("change", () => {
       initCurrentOption();
     });
+
+    // 로그 토글 버튼
+    document.getElementById("toggleLogBtn").addEventListener("click", () => {
+      logVisible = !logVisible;
+      updateLogVisibility();
+    });
+
+    // 초기 상태에서 로그는 접어두기
+    updateLogVisibility();
 
     // ============= 시작 =============
     loadData().catch(err => {
