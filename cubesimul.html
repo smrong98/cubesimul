@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>큐브 시뮬레이터 (베타)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background:#121212;
+      color:#e5e7eb;
+      margin:0;
+      padding:16px;
+    }
+    h1 {
+      margin:0 0 12px;
+      font-size:1.4rem;
+      color:#8CAF0B;
+    }
+
+    /* 전체 레이아웃: PC는 2열, 모바일은 세로 */
+    .layout {
+      display:grid;
+      grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 768px) {
+      .layout {
+        display:flex;
+        flex-direction:column;
+      }
+    }
+
+    .card {
+      background:#1e1e1e;
+      border:1px solid #2d2d2d;
+      border-radius:12px;
+      padding:12px 14px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.6);
+    }
+    .card h2 {
+      margin:0 0 8px;
+      font-size:1rem;
+      border-bottom:1px solid #2d2d2d;
+      padding-bottom:4px;
+      color:#ffffff; /* 블록 제목 흰색 */
+    }
+    @media (max-width: 768px) {
+      .card {
+        width:100%;
+      }
+    }
+
+    label {
+      font-size:0.85rem;
+      display:block;
+      margin-bottom:4px;
+    }
+    input[type="number"],
+    select {
+      width:100%;
+      padding:6px 8px;
+      border-radius:8px;
+      border:1px solid #3f3f46;
+      background:#111111;
+      color:#e5e7eb;
+      font-size:0.9rem;
+    }
+    input[type="radio"] {
+      transform:translateY(1px);
+      margin-right:4px;
+    }
+    .row {
+      display:flex;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .row > div { flex:1; }
+
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:8px 12px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-size:0.9rem;
+      font-weight:600;
+      transition:transform 0.06s ease, box-shadow 0.06s ease, background 0.1s;
+      white-space:nowrap;
+    }
+    .btn-primary {
+      background:linear-gradient(135deg,#8CAF0B,#a9d51a);
+      color:#111827;
+      box-shadow:0 10px 25px rgba(140,175,11,0.45);
+    }
+    .btn-primary:active {
+      transform:translateY(1px) scale(.99);
+      box-shadow:0 4px 12px rgba(140,175,11,0.35);
+    }
+    .btn-secondary {
+      background:#27272a;
+      color:#e5e7eb;
+      border:1px solid #3f3f46;
+    }
+    .btn-secondary:active {
+      transform:translateY(1px) scale(.99);
+      box-shadow:0 4px 12px rgba(0,0,0,0.7);
+    }
+
+    /* 옵션 카드 ㅗ 형태: Grid 3열 */
+    .options-layout {
+      margin-top:8px;
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      grid-auto-rows:auto;
+      gap:8px;
+      align-items:start;
+    }
+    /* 1행 가운데: 현재 옵션 */
+    #box-current {
+      grid-column:2 / 3;
+      grid-row:1;
+    }
+    /* 2행: 재설정 1~3 */
+    #box-roll1 {
+      grid-column:1 / 2;
+      grid-row:2;
+    }
+    #box-roll2 {
+      grid-column:2 / 3;
+      grid-row:2;
+    }
+    #box-roll3 {
+      grid-column:3 / 4;
+      grid-row:2;
+    }
+    /* 모바일에선 다시 세로로 쌓기 */
+    @media (max-width: 640px) {
+      .options-layout {
+        display:flex;
+        flex-direction:column;
+      }
+      #box-current,
+      #box-roll1,
+      #box-roll2,
+      #box-roll3 {
+        grid-column:auto;
+        grid-row:auto;
+      }
+    }
+
+    /* 옵션 카드: 4개 동일 */
+    .option-box {
+      width:100%;
+      min-height:120px;
+      border-radius:12px;
+      border:1px solid #303030;
+      background:radial-gradient(circle at top, #252525 0, #111111 60%);
+      font-size:0.8rem;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 6px 18px rgba(0,0,0,0.55);
+      transition:transform 0.08s ease, box-shadow 0.08s ease, border-color 0.08s ease;
+      opacity:1;
+    }
+    .option-box.current {
+      border-color:#8CAF0B;
+      box-shadow:0 0 0 1px rgba(140,175,11,0.4), 0 6px 18px rgba(0,0,0,0.7);
+    }
+
+    .option-title {
+      margin:-1px -1px 6px -1px;
+      padding:4px 10px;
+      background:linear-gradient(180deg, #8CAF0B, #5f7a07);
+      border-radius:10px 10px 0 0;
+      border-bottom:1px solid #141414;
+      font-size:0.75rem;
+      font-weight:600;
+      color:#f9fafb;         /* 제목 흰색 */
+      text-align:center;
+      text-shadow:0 1px 1px rgba(0,0,0,0.7);
+    }
+
+    .option-inner {
+      padding:4px 8px 8px;
+    }
+
+    .option-lines div {
+      margin-bottom:2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .option-box.candidate {
+      cursor:pointer;
+    }
+    .option-box.candidate:hover {
+      transform:translateY(-1px);
+      box-shadow:0 10px 24px rgba(0,0,0,0.75);
+      border-color:#8CAF0B;
+    }
+    .option-box.candidate:active {
+      transform:translateY(0);
+      box-shadow:0 6px 16px rgba(0,0,0,0.7);
+    }
+
+    /* 재설정 시 아래 3개 카드 페이드인 */
+    @keyframes fadeInFast {
+      from { opacity:0; transform:translateY(4px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in-fast {
+      animation:fadeInFast 0.18s ease-out;
+    }
+
+    /* 선택 시: 후보 카드 페이드아웃, 현재옵션 페이드인 */
+    @keyframes fadeOutCard {
+      from { opacity:1; transform:scale(1); }
+      to   { opacity:0; transform:scale(0.98); }
+    }
+    .fade-out-card {
+      animation:fadeOutCard 0.15s ease-out;
+    }
+    @keyframes fadeInCard {
+      from { opacity:0; transform:translateY(-2px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-in-card {
+      animation:fadeInCard 0.2s ease-out;
+    }
+
+    .stats-row {
+      margin-top:6px;
+      font-size:0.9rem;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    #log {
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New", monospace;
+      font-size:0.75rem;
+      max-height:260px;
+      overflow-y:auto;
+      padding:6px 8px;
+      background:#111111;
+      border-radius:8px;
+      border:1px solid #27272a;
+      white-space:pre-wrap;
+    }
+    .tag {
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      font-size:0.75rem;
+      padding:2px 6px;
+      border-radius:999px;
+      border:1px solid #3f3f46;
+      background:#111111;
+      margin-top:4px;
+      width:max-content;
+    }
+    .tag-dot {
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:#8CAF0B;
+    }
+
+    #card-settings   { grid-column:1; grid-row:1; }
+    #card-options    { grid-column:2; grid-row:1; }
+    #card-stats      { grid-column:1; grid-row:2; }
+    #card-log        { grid-column:2; grid-row:2; }
+    @media (max-width: 768px) {
+      #card-settings,
+      #card-options,
+      #card-stats,
+      #card-log {
+        grid-column:auto;
+        grid-row:auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>큐브 시뮬레이터 (베타)</h1>
+
+  <div class="layout">
+    <!-- 1. 설정 카드 -->
+    <section class="card" id="card-settings">
+      <h2>설정</h2>
+
+      <div class="row">
+        <div>
+          <label for="itemLevel">아이템 LV.</label>
+          <select id="itemLevel">
+            <option value="100">100</option>
+            <option value="120">120</option>
+            <option value="130">130</option>
+            <option value="140">140</option>
+            <option value="150">150</option>
+            <option value="160">160</option>
+            <option value="200">200</option>
+            <option value="250">250</option>
+          </select>
+        </div>
+        <div>
+          <label for="partsType">장비 부위</label>
+          <select id="partsType">
+            <option value="1">무기</option>
+            <option value="2">엠블렘</option>
+            <option value="3">보조무기(포스실드 제외)</option>
+            <option value="4">포스실드/소울링</option>
+            <option value="5">방패</option>
+            <option value="6">모자</option>
+            <option value="7">상의</option>
+            <option value="8">한벌옷</option>
+            <option value="9">하의</option>
+            <option value="10">신발</option>
+            <option value="11">장갑</option>
+            <option value="12">망토</option>
+            <option value="13">벨트</option>
+            <option value="14">어깨장식</option>
+            <option value="15">얼굴장식</option>
+            <option value="16">눈장식</option>
+            <option value="17">귀고리</option>
+            <option value="18">반지</option>
+            <option value="19">펜던트</option>
+            <option value="20">기계심장</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>잠재 종류</label>
+          <label>
+            <input type="radio" name="cubeKind" value="upper" checked />
+            윗잠재 (블랙)
+          </label>
+          <label>
+            <input type="radio" name="cubeKind" value="addi" />
+            아랫잠재 (에디셔널)
+          </label>
+        </div>
+        <div>
+          <label>주스탯</label>
+          <div>
+            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
+            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
+            <label><input type="radio" name="mainStat" value="INT" />INT</label>
+            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">적용 및 리셋</button>
+      </div>
+    </section>
+
+    <!-- 2. 옵션 카드 + 재설정 버튼 -->
+    <section class="card" id="card-options">
+      <h2>잠재 옵션</h2>
+
+      <div class="options-layout">
+        <div class="option-box current" id="box-current">
+          <div class="option-title">현재 옵션</div>
+          <div class="option-inner">
+            <div class="option-lines" id="lines-current"></div>
+          </div>
+        </div>
+
+        <div class="option-box candidate" id="box-roll1" data-choice="1">
+          <div class="option-title">재설정 1</div>
+          <div class="option-inner">
+            <div class="option-lines" id="lines-roll1"></div>
+          </div>
+        </div>
+        <div class="option-box candidate" id="box-roll2" data-choice="2">
+          <div class="option-title">재설정 2</div>
+          <div class="option-inner">
+            <div class="option-lines" id="lines-roll2"></div>
+          </div>
+        </div>
+        <div class="option-box candidate" id="box-roll3" data-choice="3">
+          <div class="option-title">재설정 3</div>
+          <div class="option-inner">
+            <div class="option-lines" id="lines-roll3"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button class="btn btn-primary" id="rollBtn">재설정하기</button>
+      </div>
+    </section>
+
+    <!-- 3. 재설정 현황 -->
+    <section class="card" id="card-stats">
+      <h2>재설정 현황</h2>
+      <div class="stats-row">
+        <div id="rollCountTag">재설정 횟수: 0</div>
+        <div id="mesoTag">소모 메소: 0 메소</div>
+        <div id="cubeTypeTag" class="tag">
+          <span class="tag-dot"></span>
+          <span>윗잠재</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 로그 -->
+    <section class="card" id="card-log">
+      <h2>로그 (최근 100회)</h2>
+      <div id="log"></div>
+    </section>
+  </div>
+
+  <script>
+    // ============= 전역 상태 =============
+    let bcProbs = [];
+    let wcProbs = [];
+    let allProbs = [];
+
+    let currentLines = [];
+    let rollCandidates = [[], [], []];
+
+    let rollCount = 0;
+    let mesoUsed = 0;
+    let logEntries = [];
+
+    const poolCache = new Map();
+
+    const ONLY_ONE_KEYWORDS = [
+      "쓸만한",
+      "피격 후 무적"
+    ];
+    const AT_MOST_TWO_KEYWORDS = [
+      "피격 시 일정 확률로 데미지",
+      "피격 시 일정 확률로 일정 시간 무적"
+    ];
+
+    // ============= 데이터 로드 =============
+    async function loadData() {
+      const [bc, wc] = await Promise.all([
+        fetch("bcprobs.json").then(r => r.json()),
+        fetch("wcprobs.json").then(r => r.json())
+      ]);
+      bcProbs = bc;
+      wcProbs = wc;
+      allProbs = [...bcProbs, ...wcProbs];
+      console.log("데이터 로드 완료:", allProbs.length);
+      initCurrentOption();
+    }
+
+    // ============= UI 유틸 =============
+    function getSelectedLevel() {
+      return Number(document.getElementById("itemLevel").value);
+    }
+    function getSelectedPartsType() {
+      return Number(document.getElementById("partsType").value);
+    }
+    function getSelectedCubeId() {
+      const kind = document.querySelector('input[name="cubeKind"]:checked').value;
+      return kind === "addi" ? "5062500" : "5062010";
+    }
+    function updateCubeTag() {
+      const cubeId = getSelectedCubeId();
+      const tag = document.getElementById("cubeTypeTag").querySelector("span:last-child");
+      tag.textContent = cubeId === "5062500" ? "에디셔널" : "윗잠재";
+    }
+
+    // 한국식 메소 포맷 (억, 만)
+    function formatMesoKorean(v) {
+      if (!v) return "0 메소";
+      const isNegative = v < 0;
+      let n = Math.abs(v);
+
+      const eok = Math.floor(n / 100000000);
+      n = n % 100000000;
+      const man = Math.floor(n / 10000);
+      const one = n % 10000;
+
+      const parts = [];
+      if (eok) parts.push(eok + "억");
+      if (man) parts.push(man + "만");
+      if (one || parts.length === 0) parts.push(one.toLocaleString("ko-KR"));
+
+      return (isNegative ? "-" : "") + parts.join(" ") + " 메소";
+    }
+
+    function updateStatsTags() {
+      document.getElementById("rollCountTag").textContent = `재설정 횟수: ${rollCount}`;
+      document.getElementById("mesoTag").textContent = `소모 메소: ${formatMesoKorean(mesoUsed)}`;
+    }
+
+    // ============= 비용 테이블 =============
+    function getCostPerSet(level, cubeItemID) {
+      const isAddi = cubeItemID === "5062500";
+      const tableMain = [
+        {min:250, max:300, cost: 50000000},
+        {min:200, max:249, cost: 45000000},
+        {min:160, max:199, cost: 42500000},
+        {min:1,   max:159, cost: 40000000}
+      ];
+      const tableAddi = [
+        {min:250, max:300, cost: 98000000},
+        {min:200, max:249, cost: 88000000},
+        {min:160, max:199, cost: 83000000},
+        {min:1,   max:159, cost: 78000000}
+      ];
+      const table = isAddi ? tableAddi : tableMain;
+      for (const row of table) {
+        if (level >= row.min && level <= row.max) return row.cost;
+      }
+      return table[table.length - 1].cost;
+    }
+
+    // ============= 확률 풀 / 추출 =============
+    function poolKey(cubeItemID, partsType, level, line) {
+      return `${cubeItemID}-${partsType}-${level}-${line}`;
+    }
+
+    function getBasePool(cubeItemID, partsType, level, line) {
+      const key = poolKey(cubeItemID, partsType, level, line);
+      if (poolCache.has(key)) return poolCache.get(key);
+      const pool = allProbs.filter(
+        r =>
+          r.cubeItemID === cubeItemID &&
+          r.partsType === partsType &&
+          r.reqLev === level &&
+          r.line === line
+      );
+      poolCache.set(key, pool);
+      return pool;
+    }
+
+    function textMatchesAny(text, keywords) {
+      return keywords.some(kw => text.includes(kw));
+    }
+    function isGroupOne(text) {
+      return textMatchesAny(text, ONLY_ONE_KEYWORDS);
+    }
+    function isGroupTwo(text) {
+      return textMatchesAny(text, AT_MOST_TWO_KEYWORDS);
+    }
+
+    function rollOneLine({cubeItemID, partsType, level, line, existingLines}) {
+      const basePool = getBasePool(cubeItemID, partsType, level, line);
+      if (!basePool.length) return null;
+
+      const countG1 = existingLines.filter(l => isGroupOne(l.optionText)).length;
+      const countG2 = existingLines.filter(l => isGroupTwo(l.optionText)).length;
+
+      const filtered = [];
+      for (const row of basePool) {
+        const text = row.optionText;
+        if (isGroupOne(text) && countG1 >= 1) continue;
+        if (isGroupTwo(text) && countG2 >= 2) continue;
+        filtered.push(row);
+      }
+      if (!filtered.length) return null;
+
+      let totalProb = 0;
+      for (const row of filtered) totalProb += row.probability;
+
+      const r = Math.random() * totalProb;
+      let acc = 0;
+      for (const row of filtered) {
+        acc += row.probability;
+        if (r <= acc) {
+          return { line, optionText: row.optionText, raw: row };
+        }
+      }
+      const last = filtered[filtered.length - 1];
+      return { line, optionText: last.optionText, raw: last };
+    }
+
+    function isSameSet(aLines, bLines) {
+      if (!aLines || !bLines) return false;
+      if (aLines.length !== 3 || bLines.length !== 3) return false;
+      for (let i = 0; i < 3; i++) {
+        if (aLines[i].optionText !== bLines[i].optionText) return false;
+      }
+      return true;
+    }
+
+    function rollOneSet(context) {
+      while (true) {
+        const lines = [];
+        for (let line = 1; line <= 3; line++) {
+          const opt = rollOneLine({
+            cubeItemID: context.cubeItemID,
+            partsType: context.partsType,
+            level: context.level,
+            line,
+            existingLines: lines
+          });
+          if (!opt) break;
+          lines.push(opt);
+        }
+        if (lines.length !== 3) continue;
+        if (isSameSet(lines, currentLines)) continue;
+        return lines;
+      }
+    }
+
+    // ============= 표시 & 로그 =============
+    function renderLines(elemId, lines) {
+      const elem = document.getElementById(elemId);
+      elem.innerHTML = "";
+      if (!lines || !lines.length) {
+        elem.innerHTML = "<div style='color:#71717a;'>-</div>";
+        return;
+      }
+      for (const l of lines) {
+        const div = document.createElement("div");
+        div.textContent = l.optionText;
+        elem.appendChild(div);
+      }
+    }
+
+    function renderAllBoxes() {
+      renderLines("lines-current", currentLines);
+      renderLines("lines-roll1", rollCandidates[0]);
+      renderLines("lines-roll2", rollCandidates[1]);
+      renderLines("lines-roll3", rollCandidates[2]);
+    }
+
+    function appendLogEntry(text) {
+      logEntries.unshift(text);
+      if (logEntries.length > 100) logEntries.pop();
+      document.getElementById("log").textContent = logEntries.join("\n");
+    }
+
+    // ============= 동작 로직 =============
+    function initCurrentOption() {
+      const cubeItemID = getSelectedCubeId();
+      const level = getSelectedLevel();
+      const partsType = getSelectedPartsType();
+      const ctx = { cubeItemID, partsType, level };
+
+      currentLines = rollOneSet(ctx);
+      rollCandidates = [[], [], []];
+      rollCount = 0;
+      mesoUsed = 0;
+      logEntries = [];
+      document.getElementById("log").textContent = "";
+      updateCubeTag();
+      updateStatsTags();
+      renderAllBoxes();
+    }
+
+    function doOneRollStep() {
+      const cubeItemID = getSelectedCubeId();
+      const level = getSelectedLevel();
+      const partsType = getSelectedPartsType();
+      const ctx = { cubeItemID, partsType, level };
+
+      const costPerSet = getCostPerSet(level, cubeItemID);
+
+      const cand1 = rollOneSet(ctx);
+      const cand2 = rollOneSet(ctx);
+      const cand3 = rollOneSet(ctx);
+      rollCandidates = [cand1, cand2, cand3];
+
+      rollCount += 3;
+      mesoUsed += costPerSet * 3;
+
+      appendLogEntry(
+        `[${rollCount - 2}~${rollCount}] LV${level} ${cubeItemID === "5062500" ? "에디" : "윗"} ${
+          document.getElementById("partsType").selectedOptions[0].text
+        } | 1: ${cand1.map(l=>l.optionText).join(" / ")} | 2: ${cand2.map(l=>l.optionText).join(" / ")} | 3: ${cand3.map(l=>l.optionText).join(" / ")}`
+      );
+
+      updateStatsTags();
+      renderAllBoxes();
+      triggerCandidatesFadeIn();
+    }
+
+    function triggerCandidatesFadeIn() {
+      const ids = ["box-roll1", "box-roll2", "box-roll3"];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove("fade-in-fast");
+        void el.offsetWidth;
+        el.classList.add("fade-in-fast");
+        el.addEventListener("animationend", () => {
+          el.classList.remove("fade-in-fast");
+        }, { once:true });
+      });
+    }
+
+    // 후보 선택: 카드 페이드아웃 → 현재옵션 갱신 + 페이드인
+    function chooseCandidate(idx) {
+      const cand = rollCandidates[idx];
+      if (!cand || !cand.length) return;
+
+      const boxId = `box-roll${idx + 1}`;
+      const candBox = document.getElementById(boxId);
+      const currentBox = document.getElementById("box-current");
+
+      // 후보 카드 페이드아웃
+      candBox.classList.remove("fade-out-card");
+      void candBox.offsetWidth;
+      candBox.classList.add("fade-out-card");
+
+      candBox.addEventListener("animationend", () => {
+        candBox.classList.remove("fade-out-card");
+
+        // 현재 옵션 갱신
+        currentLines = cand.map(l => ({...l}));
+        renderAllBoxes();
+
+        // 현재 카드 페이드인
+        currentBox.classList.remove("fade-in-card");
+        void currentBox.offsetWidth;
+        currentBox.classList.add("fade-in-card");
+        currentBox.addEventListener("animationend", () => {
+          currentBox.classList.remove("fade-in-card");
+        }, { once:true });
+      }, { once:true });
+    }
+
+    // ============= 이벤트 바인딩 =============
+    document.getElementById("applyResetBtn").addEventListener("click", () => {
+      initCurrentOption();
+    });
+
+    document.getElementById("rollBtn").addEventListener("click", () => {
+      doOneRollStep();
+    });
+
+    document.querySelectorAll(".option-box.candidate").forEach(box => {
+      box.addEventListener("click", (e) => {
+        const idx = Number(e.currentTarget.getAttribute("data-choice")) - 1;
+        chooseCandidate(idx);
+      });
+    });
+
+    document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+      r.addEventListener("change", () => {
+        updateCubeTag();
+        initCurrentOption();
+      });
+    });
+
+    document.getElementById("itemLevel").addEventListener("change", () => {
+      initCurrentOption();
+    });
+    document.getElementById("partsType").addEventListener("change", () => {
+      initCurrentOption();
+    });
+
+    // ============= 시작 =============
+    loadData().catch(err => {
+      console.error("데이터 로드 실패:", err);
+      alert("bcprobs.json / wcprobs.json을 불러오지 못했습니다. 파일 위치를 확인하세요.");
+    });
+  </script>
+</body>
+</html>
