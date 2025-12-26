@@ -303,7 +303,7 @@
   </style>
 </head>
 <body>
-  <h1>큐브 시뮬레이터 (베타)</h1>
+  <h1>큐브 시뮬레이터 v.251226</h1>
 
   <div class="layout">
     <!-- 1. 설정 카드 -->
@@ -312,7 +312,7 @@
 
       <div class="row">
         <div>
-          <label for="itemLevel">아이템 LV.</label>
+          <label for="itemLevel">아이템 레벨벨.</label>
           <select id="itemLevel">
             <option value="100">100</option>
             <option value="120">120</option>
@@ -320,7 +320,7 @@
             <option value="140">140</option>
             <option value="150">150</option>
             <option value="160">160</option>
-            <option value="200">200</option>
+            <option value="200" selected>200</option>
             <option value="250">250</option>
           </select>
         </div>
@@ -356,11 +356,11 @@
           <label>잠재 종류</label>
           <label>
             <input type="radio" name="cubeKind" value="upper" checked />
-            윗잠재 (블랙)
+            윗잠재
           </label>
           <label>
             <input type="radio" name="cubeKind" value="addi" />
-            아랫잠재 (에디셔널)
+            아랫잠재
           </label>
         </div>
         <div>
@@ -376,13 +376,47 @@
 
       <!-- 무기 전용 자동 돌리기 설정 UI -->
       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
-        <label style="margin-bottom:4px;">무기 자동 돌리기 (공격력 / 마력 %)</label>
-        <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
-          무기 부위에서만 사용 가능. 공격력/마력 % 옵션이 설정값 이상이면 자동으로 멈춥니다.
+        <label style="margin-bottom:4px;">자동 돌리기 설정 (무기/보조무기/엠블렘)</label>
+        <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+          무기/보조무기/엠블렘에서만 사용 가능. 윗잠재/아랫잠재(에디) 각각 별도 조건으로 자동으로 멈춥니다.<br>
+          예를 들어서 방무를 최대 1줄 고른다면, 방무가 없는 3줄을 포함하여 보방공같은 옵션도 유효로 취급함
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 %</label>
-          <input type="number" id="weaponAutoTarget" value="30" min="1" max="100" style="max-width:80px;" />
+
+        <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
+        <div data-auto-kind="addi">
+          <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
+            후보 3개 중 어느 하나라도 공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 %</label>
+            <input type="number" id="weaponAutoTarget" value="30" min="1" max="100" style="max-width:80px;" />
+          </div>
+        </div>
+
+        <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
+        <div data-auto-kind="main" style="margin-top:10px;">
+          <label style="margin-bottom:4px;">윗잠재 자동 돌리기 (유효 옵션 조합)</label>
+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+            3줄 전체 결과가 조건을 만족하는 후보가 나오면 자동으로 멈춥니다.
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label for="autoMainIED" style="margin:0; font-size:0.85rem;">최대 방무 몇 줄</label>
+              <select id="autoMainIED" style="max-width:110px;">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+              </select>
+            </div>
+
+            <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
+              <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">보공 최소 몇 줄</label>
+              <select id="autoMainBossMin" style="max-width:110px;"></select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -824,6 +858,6 @@
   </script>
 
   <!-- 자동 돌리기 전용 스크립트 (별도 파일) -->
-  <script src="cube-auto.js"></script>
+  <script src="autoRoll.js"></script>
 </body>
 </html>
