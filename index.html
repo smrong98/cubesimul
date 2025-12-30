@@ -648,23 +648,35 @@
 
 
     function updateStatsTags() {
-      document.getElementById("rollCountTag").textContent = `재설정 횟수: ${rollCount}`;
-
       const cubeId = getSelectedCubeId();
+
+      const rollCountEl = document.getElementById("rollCountTag");
       const mesoTag = document.getElementById("mesoTag");
       const azmosTag = document.getElementById("azmosTag");
 
       if (cubeId === CUBE_ID_MEISTER) {
-        // 명장의 큐브: 메소 대신 큐브 소모 표시
-        mesoTag.textContent = `소모 큐브: ${meisterUsed}개`;
-        azmosTag.style.display = "block";
-        azmosTag.textContent = `아즈모스 협곡 1만점: ${formatAzmosWeeksFromCubes(meisterUsed)}`;
-      } else {
-        // 블랙/에디: 기존 메소 표시
-        mesoTag.textContent = `소모 메소: ${formatMesoKorean(mesoUsed)}`;
-        azmosTag.style.display = "none";
+        // ✅ 명장: 재설정 횟수는 숨김(소모 큐브로 충분)
+        if (rollCountEl) rollCountEl.style.display = "none";
+
+        if (mesoTag) mesoTag.textContent = `소모 큐브: ${meisterUsed}개`;
+
+        if (azmosTag) {
+          azmosTag.style.display = "block";
+          azmosTag.textContent = `아즈모스 협곡 1만점: ${formatAzmosWeeksFromCubes(meisterUsed)}`;
+        }
+        return;
       }
+
+      // 블랙/에디: 재설정 횟수 표시 + 메소 표시
+      if (rollCountEl) {
+        rollCountEl.style.display = "block";
+        rollCountEl.textContent = `재설정 횟수: ${rollCount}`;
+      }
+
+      if (mesoTag) mesoTag.textContent = `소모 메소: ${formatMesoKorean(mesoUsed)}`;
+      if (azmosTag) azmosTag.style.display = "none";
     }
+
 
 
     function updateLogVisibility() {
