@@ -7,7 +7,9 @@
   const PARTS = {
     WEAPON: 1,
     EMBLEM: 2,
-    SECONDARY: 3
+    SECONDARY: 3,        // 보조무기(포스실드 제외)
+    FORCE_SHIELD: 4,     // 포스실드/소울링
+    SHIELD: 5            // 방패  
   };
 
   const CUBE_ID_ADDI = "5062500";
@@ -19,14 +21,25 @@
 
   function isSupportedParts() {
     const p = getSelectedPartsTypeSafe();
-    return p === PARTS.WEAPON || p === PARTS.SECONDARY || p === PARTS.EMBLEM;
+    return (
+      p === PARTS.WEAPON ||
+      p === PARTS.EMBLEM ||
+      p === PARTS.SECONDARY ||
+      p === PARTS.FORCE_SHIELD ||
+      p === PARTS.SHIELD
+    );
   }
 
   function isWeaponOrSecondarySelected() {
     const p = getSelectedPartsTypeSafe();
-    return p === PARTS.WEAPON || p === PARTS.SECONDARY;
+    return (
+      p === PARTS.WEAPON ||
+      p === PARTS.SECONDARY ||
+      p === PARTS.FORCE_SHIELD ||
+      p === PARTS.SHIELD
+    );
   }
-
+  
   function getSelectedCubeIdSafe() {
     return typeof getSelectedCubeId === "function" ? getSelectedCubeId() : CUBE_ID_MAIN;
   }
@@ -152,6 +165,42 @@
     return false;
   }
 
+  function clearAutoHitUI() {
+    ["box-roll1", "box-roll2", "box-roll3"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove("auto-hit");
+      el.classList.remove("auto-hit-flash");
+    });
+  }
+  
+  // 조건을 만족하는 후보들에 골드 하이라이트 적용
+  function applyAutoHitUIForCandidates(predicate) {
+    // predicate(candLines) => boolean
+    const ids = ["box-roll1", "box-roll2", "box-roll3"];
+  
+    for (let i = 0; i < 3; i++) {
+      const cand = Array.isArray(rollCandidates) ? rollCandidates[i] : null;
+      if (!cand) continue;
+  
+      if (predicate(cand)) {
+        const el = document.getElementById(ids[i]);
+        if (!el) continue;
+  
+        el.classList.add("auto-hit");
+        el.classList.add("auto-hit-flash");
+  
+        // flash는 끝나면 제거, hit는 유지
+        el.addEventListener("animationend", () => {
+          el.classList.remove("auto-hit-flash");
+        }, { once: true });
+      }
+    }
+  }
+
+  
+  
+
   function updateAutoButton(running) {
     const btn = document.getElementById("autoRollBtn");
     if (!btn) return;
@@ -229,20 +278,30 @@
     // 한 번 세트 롤
     if (typeof doOneRollStep === "function") {
       doOneRollStep();
+      clearAutoHitUI();
     }
 
     if (payload && payload.mode === "addi") {
       // 3줄 합산 %가 목표 이상인 세트가 하나라도 있으면 종료
       if (hasSatisfiedCandidateAdditional(payload.targetPercent)) {
+        applyAutoHitUIForCandidates(cand => {
+          const mainStat = getMainStat();
+          return getTotalAtkPercentInSet(cand, mainStat) >= payload.targetPercent;
+        });
         stopAuto();
         return;
       }
+      
     } else if (payload && payload.mode === "main") {
       // 3줄 전체 기준 유효옵션 충족 시 종료
       if (hasSatisfiedCandidateMain(payload.criteria)) {
+        const partsType = getSelectedPartsTypeSafe();
+        applyAutoHitUIForCandidates(cand => {
+          return isMainValidSet(cand, partsType, payload.criteria.iedMaxN, payload.criteria.bossMinM);
+        });
         stopAuto();
         return;
-      }
+      }      
     }
 
     // 다시 반복
@@ -334,6 +393,28 @@
           startAuto();
         }
       });
+      // 적용 및 리셋 클릭 시 하이라이트 제거
+      const applyResetBtn = document.getElementById("applyResetBtn");
+      if (applyResetBtn) {
+        applyResetBtn.addEventListener("click", () => {
+          clearAutoHitUI();
+        });
+      }
+
+      // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
+      document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+        r.addEventListener("change", () => {
+          clearAutoHitUI();
+        });
+      });
+
+      // 부위 변경 시에도 남아있으면 혼동되므로 제거(권장)
+      const partsSelect2 = document.getElementById("partsType");
+      if (partsSelect2) {
+        partsSelect2.addEventListener("change", () => {
+          clearAutoHitUI();
+        });
+      }
     }
 
     const partsSelect = document.getElementById("partsType");
@@ -356,6 +437,7 @@
         refreshAutoPanelVisibility();
       });
     }
+    
 
     // 초기 boss dropdown 구성
     updateBossMinOptions();
