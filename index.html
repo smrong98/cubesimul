@@ -205,39 +205,41 @@
 
     /* 자동돌리기 성공 하이라이트: 테두리는 그대로 두고, 바깥으로 퍼지는 골드 글로우 */
     .option-box.auto-hit {
-    /* border-color 건드리지 않음 (기본 테두리 유지) */
-    box-shadow:
-      0 0 0 1px rgba(214,178,94,0.0),              /* 테두리 강화 없음 */
-      0 0 10px rgba(245,215,110,0.22),            /* 가까운 글로우 */
-      0 0 22px rgba(245,215,110,0.16),            /* 중간 */
-        0 0 44px rgba(245,215,110,0.10),            /* 먼 거리 페이드 */
-        0 10px 24px rgba(0,0,0,0.75);               /* 기존 그림자 유지 보강 */
+      box-shadow:
+        0 0 14px rgba(255,225,130,0.45),   /* 중심 밝기 ↑ */
+        0 0 30px rgba(255,210,110,0.32),
+        0 0 60px rgba(255,210,110,0.22),
+        0 0 90px rgba(255,210,110,0.12),
+        0 10px 24px rgba(0,0,0,0.75);
     }
+
 
     /* 번쩍 효과(짧게): 글로우 강도만 순간적으로 올렸다가 내려감 */
     @keyframes autoHitFlash {
       0% {
         box-shadow:
-          0 0 10px rgba(245,215,110,0.18),
-          0 0 22px rgba(245,215,110,0.12),
-          0 0 44px rgba(245,215,110,0.07),
+          0 0 14px rgba(255,215,120,0.25),
+          0 0 30px rgba(255,215,120,0.18),
+          0 0 60px rgba(255,215,120,0.10),
           0 10px 24px rgba(0,0,0,0.75);
       }
       45% {
         box-shadow:
-          0 0 14px rgba(245,215,110,0.55),
-          0 0 30px rgba(245,215,110,0.35),
-          0 0 60px rgba(245,215,110,0.22),
+          0 0 22px rgba(255,235,150,0.85),  /* 핵심 */
+          0 0 44px rgba(255,220,130,0.55),
+          0 0 80px rgba(255,220,130,0.35),
+          0 0 120px rgba(255,220,130,0.20),
           0 10px 24px rgba(0,0,0,0.75);
       }
       100% {
         box-shadow:
-          0 0 10px rgba(245,215,110,0.22),
-          0 0 22px rgba(245,215,110,0.16),
-          0 0 44px rgba(245,215,110,0.10),
+          0 0 14px rgba(255,215,120,0.45),
+          0 0 30px rgba(255,215,120,0.32),
+          0 0 60px rgba(255,215,120,0.22),
           0 10px 24px rgba(0,0,0,0.75);
       }
     }
+
 
     .option-box.auto-hit-flash {
       animation: autoHitFlash 0.9s ease-out;
@@ -659,7 +661,7 @@
         // ✅ 명장: 재설정 횟수는 숨김(소모 큐브로 충분)
         if (rollCountEl) rollCountEl.style.display = "none";
 
-        if (mesoTag) mesoTag.textContent = `소모 큐브: ${meisterUsed}개`;
+        if (mesoTag) mesoTag.textContent = `소모된 명장의 큐브: ${meisterUsed}개`;
 
         if (azmosTag) {
           azmosTag.style.display = "block";
