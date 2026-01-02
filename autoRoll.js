@@ -276,7 +276,7 @@
 
     if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
       const cooldownTotal = getCooldownTotal(candLines);
-      if (cooldownTotal >= criteria.minCooldown + 2) return true;
+      if (cooldownTotal >= criteria.minCooldown + 1) return true;
       return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
     }
 

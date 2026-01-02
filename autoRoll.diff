@@ -1,8 +1,8 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index 8dd1ca85aad27947dfd900a623c65f836e4f336e..8c42f6b45efa12fe7b63e5b6e090a46ce69284f5 100644
+index f919d6b990bb38f8bbbadc39358fd34f84e52a26..9ea373915e426eeef41146c5a075c1970ae1c7e3 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -252,64 +252,70 @@
+@@ -252,55 +252,55 @@
        return true;
      }
    
@@ -29,39 +29,30 @@ index 8dd1ca85aad27947dfd900a623c65f836e4f336e..8c42f6b45efa12fe7b63e5b6e090a46c
      }
  
 -    if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
--      if (getCooldownTotal(candLines) >= criteria.minCooldown) return true;
+-      const cooldownTotal = getCooldownTotal(candLines);
+-      if (cooldownTotal >= criteria.minCooldown + 2) return true;
+-      return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
 -    }
--
--    if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
--      if (countCritDamageLines(candLines) >= criteria.minCritLines) return true;
--    }
--
--    if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
--      if (countDropMesoLines(candLines) >= criteria.minDropMesoLines) return true;
--    }
--
--    return statTotal >= criteria.targetPercent;
--  }
 +    if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
 +      const cooldownTotal = getCooldownTotal(candLines);
-+      if (cooldownTotal >= criteria.minCooldown + 2) return true;
++      if (cooldownTotal >= criteria.minCooldown + 1) return true;
 +      return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
 +    }
-+
-+    if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
-+      const critLines = countCritDamageLines(candLines);
-+      if (critLines >= criteria.minCritLines + 1) return true;
-+      return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
-+    }
-+
-+    if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
-+      const dropMesoLines = countDropMesoLines(candLines);
-+      if (dropMesoLines >= criteria.minDropMesoLines + 1) return true;
-+      return statTotal >= criteria.targetPercent && dropMesoLines >= criteria.minDropMesoLines;
-+    }
-+
-+    return statTotal >= criteria.targetPercent;
-+  }
+ 
+     if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
+       const critLines = countCritDamageLines(candLines);
+       if (critLines >= criteria.minCritLines + 1) return true;
+       return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
+     }
+ 
+     if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
+       const dropMesoLines = countDropMesoLines(candLines);
+       if (dropMesoLines >= criteria.minDropMesoLines + 1) return true;
+       return statTotal >= criteria.targetPercent && dropMesoLines >= criteria.minDropMesoLines;
+     }
+ 
+     return statTotal >= criteria.targetPercent;
+   }
  
  
    // ====== additional(아랫잠재) stop condition ======
@@ -72,18 +63,3 @@ index 8dd1ca85aad27947dfd900a623c65f836e4f336e..8c42f6b45efa12fe7b63e5b6e090a46c
        const total = getTotalAtkPercentInSet(cand, mainStat);
        if (total >= targetPercent) {
          return true;
-       }
-     }
-     return false;
-   }
- 
-   // ====== main(윗잠재) stop condition ======
-   function hasSatisfiedCandidateMain(criteria) {
-     if (!Array.isArray(rollCandidates)) return false;
-     const partsType = getSelectedPartsTypeSafe();
-     for (const cand of rollCandidates) {
-       if (isMainValidSet(cand, partsType, criteria.iedMaxN, criteria.bossMinM)) {
-         return true;
-       }
-     }
-     return false;
