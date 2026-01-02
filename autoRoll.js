@@ -267,12 +267,12 @@
 
   function isStatValidSet(candLines, partsType, criteria) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-    let statTotal = getStatTotalByType(candLines, criteria.statType);
-
-    if (partsType === PARTS.GLOVE) {
-      const critLines = countCritDamageLines(candLines);
-      statTotal += critLines * 32;
-    }
+    const baseStatTotal = getStatTotalByType(candLines, criteria.statType);
+    const critLines = partsType === PARTS.GLOVE ? countCritDamageLines(candLines) : 0;
+    const statTotal =
+      partsType === PARTS.GLOVE && criteria.minCritLines === 0
+        ? baseStatTotal + critLines * 32
+        : baseStatTotal;
 
     if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
       const cooldownTotal = getCooldownTotal(candLines);
@@ -281,9 +281,8 @@
     }
 
     if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
-      const critLines = countCritDamageLines(candLines);
       if (critLines >= criteria.minCritLines + 1) return true;
-      return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
+      return baseStatTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
     }
 
     if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {

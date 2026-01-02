@@ -1,8 +1,17 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index f919d6b990bb38f8bbbadc39358fd34f84e52a26..9ea373915e426eeef41146c5a075c1970ae1c7e3 100644
+index 924241080128ed754957b7df6c7a9112b2934c22..f6257562705bf89e0fdb5914114dadc2d5f07383 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -252,55 +252,55 @@
+@@ -243,70 +243,69 @@
+       // 엠블렘: Boss 없음 (혹시 데이터에 섞이면 무효 처리)
+       const bossCount = countLines(candLines, isBossLine);
+       if (bossCount > 0) return false;
+   
+       // IED가 아닌 줄은 전부 ATK/MATK% 이어야 함
+       for (const l of candLines) {
+         if (isIEDLine(l)) continue;
+         if (!isAtkLine(l, mainStat)) return false;
+       }
        return true;
      }
    
@@ -19,31 +28,38 @@ index f919d6b990bb38f8bbbadc39358fd34f84e52a26..9ea373915e426eeef41146c5a075c197
      return true;
    }
  
-   function isStatValidSet(candLines, partsType, criteria) {
-     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-     let statTotal = getStatTotalByType(candLines, criteria.statType);
- 
-     if (partsType === PARTS.GLOVE) {
-       const critLines = countCritDamageLines(candLines);
-       statTotal += critLines * 32;
-     }
- 
--    if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
--      const cooldownTotal = getCooldownTotal(candLines);
--      if (cooldownTotal >= criteria.minCooldown + 2) return true;
--      return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
+-  function isStatValidSet(candLines, partsType, criteria) {
+-    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+-    let statTotal = getStatTotalByType(candLines, criteria.statType);
+-
+-    if (partsType === PARTS.GLOVE) {
+-      const critLines = countCritDamageLines(candLines);
+-      statTotal += critLines * 32;
 -    }
-+    if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
-+      const cooldownTotal = getCooldownTotal(candLines);
-+      if (cooldownTotal >= criteria.minCooldown + 1) return true;
-+      return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
-+    }
++  function isStatValidSet(candLines, partsType, criteria) {
++    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
++    const baseStatTotal = getStatTotalByType(candLines, criteria.statType);
++    const critLines = partsType === PARTS.GLOVE ? countCritDamageLines(candLines) : 0;
++    const statTotal =
++      partsType === PARTS.GLOVE && criteria.minCritLines === 0
++        ? baseStatTotal + critLines * 32
++        : baseStatTotal;
  
-     if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
-       const critLines = countCritDamageLines(candLines);
-       if (critLines >= criteria.minCritLines + 1) return true;
-       return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
+     if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
+       const cooldownTotal = getCooldownTotal(candLines);
+       if (cooldownTotal >= criteria.minCooldown + 1) return true;
+       return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
      }
+ 
+-    if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
+-      const critLines = countCritDamageLines(candLines);
+-      if (critLines >= criteria.minCritLines + 1) return true;
+-      return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
+-    }
++    if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
++      if (critLines >= criteria.minCritLines + 1) return true;
++      return baseStatTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
++    }
  
      if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
        const dropMesoLines = countDropMesoLines(candLines);
@@ -63,3 +79,9 @@ index f919d6b990bb38f8bbbadc39358fd34f84e52a26..9ea373915e426eeef41146c5a075c197
        const total = getTotalAtkPercentInSet(cand, mainStat);
        if (total >= targetPercent) {
          return true;
+       }
+     }
+     return false;
+   }
+ 
+   // ====== main(윗잠재) stop condition ======
