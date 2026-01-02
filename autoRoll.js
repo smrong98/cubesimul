@@ -78,7 +78,7 @@
   function isSupportedParts() {
     const p = getSelectedPartsTypeSafe();
     if (isAdditionalCubeSelected()) {
-      return isWeaponPartsType(p);
+      return isWeaponPartsType(p) || isAccessoryPartsType(p) || isArmorPartsType(p);
     }
     return isWeaponPartsType(p) || isAccessoryPartsType(p) || isArmorPartsType(p);
   }
@@ -114,6 +114,13 @@
   function getMainKeyword(mainStat) {
     // 기존 mainStat INT이면 "마력" 기준을 유지
     return mainStat === "INT" ? "마력" : "공격력";
+  }
+
+  function getAdditionalMainStatTypes(statType) {
+    if (statType === "ANY") {
+      return ["STR", "DEX", "INT", "LUK"];
+    }
+    return [statType];
   }
 
   // ====== Line identifier helpers (옵션 텍스트 기반) ======
@@ -230,6 +237,79 @@
     return c;
   }
 
+  function isAllStatPercentLine(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    return /^올스탯 \+\d+%$/.test(text);
+  }
+
+  function isMainStatPercentLine(line, statType) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const types = getAdditionalMainStatTypes(statType);
+    return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
+  }
+
+  function isMainStatFlatLine(line, statType) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const types = getAdditionalMainStatTypes(statType);
+    return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
+  }
+
+  function isAdditionalAttackFlatLine(line, statType) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    if (statType === "INT") {
+      return /^마력 \+\d+$/.test(text);
+    }
+    if (statType === "ANY") {
+      return /^(공격력|마력) \+\d+$/.test(text);
+    }
+    return /^공격력 \+\d+$/.test(text);
+  }
+
+  function isAdditionalCritDamageLine(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    return /^크리티컬 데미지 \+\d+%$/.test(text);
+  }
+
+  function isAdditionalCooldownLine(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    return text === "스킬 재사용 대기시간 -1초";
+  }
+
+  function isAdditionalPerLevelStatLine(line, statType) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const types = getAdditionalMainStatTypes(statType);
+    return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
+  }
+
+  function isAdditionalValidLine(line, statType) {
+    return (
+      isMainStatPercentLine(line, statType) ||
+      isAllStatPercentLine(line) ||
+      isMainStatFlatLine(line, statType) ||
+      isAdditionalAttackFlatLine(line, statType) ||
+      isAdditionalCritDamageLine(line) ||
+      isAdditionalCooldownLine(line) ||
+      isAdditionalPerLevelStatLine(line, statType)
+    );
+  }
+
+  function isAdditionalStatValidSet(candLines, criteria) {
+    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+    const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
+
+    if (criteria.requiredLines === 2) {
+      return validCount >= 2;
+    }
+
+    if (validCount >= 3) return true;
+
+    const firstLine = candLines[0];
+    const secondLine = candLines[1];
+    const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
+    const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
+    return firstIsMainPercent && secondIsMainPercent;
+  }
+
   function isMainValidSet(candLines, partsType, iedMaxN, bossMinM) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
     const mainStat = getEffectiveMainStat();
@@ -302,6 +382,16 @@
     for (const cand of rollCandidates) {
       const total = getTotalAtkPercentInSet(cand, mainStat);
       if (total >= targetPercent) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasSatisfiedCandidateAdditionalStat(criteria) {
+    if (!Array.isArray(rollCandidates)) return false;
+    for (const cand of rollCandidates) {
+      if (isAdditionalStatValidSet(cand, criteria)) {
         return true;
       }
     }
@@ -411,8 +501,11 @@
     container.querySelectorAll("[data-auto-kind='main']").forEach(el => {
       el.style.display = !addi && isWeapon ? "block" : "none";
     });
-    container.querySelectorAll("[data-auto-kind='addi']").forEach(el => {
+    container.querySelectorAll("[data-auto-kind='addi-weapon']").forEach(el => {
       el.style.display = addi && isWeapon ? "block" : "none";
+    });
+    container.querySelectorAll("[data-auto-kind='addi-stat']").forEach(el => {
+      el.style.display = addi && (isAccessory || isArmor) ? "block" : "none";
     });
     container.querySelectorAll("[data-auto-kind='stat']").forEach(el => {
       el.style.display = !addi && (isAccessory || isArmor) ? "block" : "none";
@@ -479,7 +572,7 @@
       clearAutoHitUI();
     }
 
-    if (payload && payload.mode === "addi") {
+    if (payload && payload.mode === "addi-weapon") {
       // 3줄 합산 %가 목표 이상인 세트가 하나라도 있으면 종료
       if (hasSatisfiedCandidateAdditional(payload.targetPercent)) {
         applyAutoHitUIForCandidates(cand => {
@@ -489,7 +582,14 @@
         stopAuto();
         return;
       }
-      
+    } else if (payload && payload.mode === "addi-stat") {
+      if (hasSatisfiedCandidateAdditionalStat(payload.criteria)) {
+        applyAutoHitUIForCandidates(cand => {
+          return isAdditionalStatValidSet(cand, payload.criteria);
+        });
+        stopAuto();
+        return;
+      }
     } else if (payload && payload.mode === "main") {
       // 3줄 전체 기준 유효옵션 충족 시 종료
       if (hasSatisfiedCandidateMain(payload.criteria)) {
@@ -525,24 +625,52 @@
 
     if (isAdditionalCubeSelected()) {
       // ====== additional(에디) ======
-      if (!isWeaponPartsType(getSelectedPartsTypeSafe())) {
-        alert("아랫잠재 자동 돌리기는 무기류에서만 사용할 수 있습니다.");
-        return;
-      }
-      const targetInput = document.getElementById("weaponAutoTarget");
-      if (!targetInput) {
-        alert("자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
-        return;
-      }
-      const targetPercent = Number(targetInput.value);
-      if (!targetPercent || targetPercent <= 0) {
-        alert("올바른 목표 %를 입력해주세요.");
+      const partsType = getSelectedPartsTypeSafe();
+      if (isWeaponPartsType(partsType)) {
+        const targetInput = document.getElementById("weaponAutoTarget");
+        if (!targetInput) {
+          alert("자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
+          return;
+        }
+        const targetPercent = Number(targetInput.value);
+        if (!targetPercent || targetPercent <= 0) {
+          alert("올바른 목표 %를 입력해주세요.");
+          return;
+        }
+
+        autoRunning = true;
+        updateAutoButton(true);
+        autoStep({ mode: "addi-weapon", targetPercent });
         return;
       }
 
+      if (!(isAccessoryPartsType(partsType) || isArmorPartsType(partsType))) {
+        alert("아랫잠재 자동 돌리기는 장신구/방어구에서만 사용할 수 있습니다.");
+        return;
+      }
+
+      const requiredLinesSelect = document.getElementById("additionalAutoLines");
+      if (!requiredLinesSelect) {
+        alert("아랫잠재 자동 돌리기 유효 옵션 줄 수 입력칸을 찾을 수 없습니다.");
+        return;
+      }
+      const requiredLines = Number(requiredLinesSelect.value);
+      if (requiredLines !== 2 && requiredLines !== 3) {
+        alert("올바른 유효 옵션 줄 수를 선택해주세요.");
+        return;
+      }
+
+      const statType = getMainStat();
+
       autoRunning = true;
       updateAutoButton(true);
-      autoStep({ mode: "addi", targetPercent });
+      autoStep({
+        mode: "addi-stat",
+        criteria: {
+          requiredLines,
+          statType
+        }
+      });
       return;
     }
 

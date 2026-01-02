@@ -421,18 +421,34 @@
       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-          무기류: 보공/방무/공마 조합, 장신구/방어구: 주스탯% 자동 돌리기 제공<br>
+          무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
         </div>
 
         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
-        <div data-auto-kind="addi">
+        <div data-auto-kind="addi-weapon">
           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
             공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
-            <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
+            <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
+          </div>
+        </div>
+
+        <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
+        <div data-auto-kind="addi-stat" style="margin-top:10px;">
+          <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
+            2줄 또는 3줄 만족 유효옵션으로 취급
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
+            <select id="additionalAutoLines" style="max-width:110px;">
+              <option value="2">2줄</option>
+              <option value="3">3줄</option>
+            </select>
           </div>
         </div>
 
@@ -1117,6 +1133,7 @@
       <div style="margin-bottom:10px;">
         <div style="color:#e5e7eb; font-weight:600;">2026-01-02</div>
         <div>- 방어구/장신구 윗잠재 자동 돌리기 기능 추가</div>
+        <div>- 방어구/장신구 아랫랫잠재 자동 돌리기 기능 추가</div>
         <div style="color:#e5e7eb; font-weight:600;">2025-12-30</div>
         <div>- 명장의 큐브 선택 가능, 아즈모스 협곡 1만점 기준으로 필요기간 표시</div>
         <div>- 자동돌리기 목표 옵션이 등장했을 때, 특수 효과 추가</div>
