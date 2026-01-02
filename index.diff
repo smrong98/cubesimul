@@ -1,8 +1,19 @@
 diff --git a/index.html b/index.html
-index 2dd6b95dbbfbeab39b0cb64209affe6a6a9a346e..f8c433de5815b3e00c5dd552397deb96e60b6001 100644
+index 321400de24a4e9d02b22c5ee1b17911514838c69..ef3f74dcbf687ee52fc20105318172b607e759f9 100644
 --- a/index.html
 +++ b/index.html
-@@ -397,66 +397,81 @@
+@@ -386,128 +386,130 @@
+             <option value="10">신발</option>
+             <option value="11">장갑</option>
+             <option value="12">망토</option>
+             <option value="13">벨트</option>
+             <option value="14">어깨장식</option>
+             <option value="15">얼굴장식</option>
+             <option value="16">눈장식</option>
+             <option value="17">귀고리</option>
+             <option value="18">반지</option>
+             <option value="19">펜던트</option>
+             <option value="20">기계심장</option>
            </select>
          </div>
        </div>
@@ -17,64 +28,59 @@ index 2dd6b95dbbfbeab39b0cb64209affe6a6a9a346e..f8c433de5815b3e00c5dd552397deb96
          <div>
            <label>주스탯</label>
            <div>
-             <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
-             <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
-             <label><input type="radio" name="mainStat" value="INT" />INT</label>
-             <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
-             <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
+-            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
+-            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
+-            <label><input type="radio" name="mainStat" value="INT" />INT</label>
+-            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
+-            <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
++            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
++            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
++            <label><input type="radio" name="mainStat" value="INT" />INT</label>
++            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
++            <label><input type="radio" name="mainStat" value="ALLSTAT" />올스탯 (제논 용)</label>
++            <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
            </div>
          </div>
        </div>
  
        <!-- 무기 전용 자동 돌리기 설정 UI -->
        <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
--        <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
--        <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
--          무기류: 보공/방무/공마 조합, 장신구/방어구: 주스탯% 자동 돌리기 제공<br>
--        </div>
--
--        <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
--        <div data-auto-kind="addi">
--          <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
--          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
--            공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
+         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
+         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+           무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
+         </div>
+ 
+         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
+         <div data-auto-kind="addi-weapon">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
+           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
+             공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
+           </div>
+           <div style="display:flex; align-items:center; gap:8px;">
+             <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
+             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
+           </div>
+         </div>
+ 
+         <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
+         <div data-auto-kind="addi-stat" style="margin-top:10px;">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
+-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+-            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
+-            2줄 또는 3줄 만족 유효옵션으로 취급
 -          </div>
--          <div style="display:flex; align-items:center; gap:8px;">
--            <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
--            <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
--          </div>
--        </div>
-+        <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
-+        <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-+          무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
-+        </div>
-+
-+        <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
-+        <div data-auto-kind="addi-weapon">
-+          <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
-+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
-+            공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
-+          </div>
-+          <div style="display:flex; align-items:center; gap:8px;">
-+            <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
-+            <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
-+          </div>
-+        </div>
-+
-+        <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
-+        <div data-auto-kind="addi-stat" style="margin-top:10px;">
-+          <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
 +          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-+            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯. 2줄 또는 3줄 만족 시 멈춥니다.
++            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
++            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)
 +          </div>
-+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-+            <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
-+            <select id="additionalAutoLines" style="max-width:110px;">
-+              <option value="2">2줄</option>
-+              <option value="3">3줄</option>
-+            </select>
-+          </div>
-+        </div>
+           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
+             <select id="additionalAutoLines" style="max-width:110px;">
+               <option value="2">2줄</option>
+               <option value="3">3줄</option>
+             </select>
+           </div>
+         </div>
  
          <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
          <div data-auto-kind="main" style="margin-top:10px;">
@@ -100,3 +106,43 @@ index 2dd6b95dbbfbeab39b0cb64209affe6a6a9a346e..f8c433de5815b3e00c5dd552397deb96
                <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최소 보공 몇 줄</label>
                <select id="autoMainBossMin" style="max-width:110px;"></select>
              </div>
+           </div>
+         </div>
+ 
+         <!-- 장신구/방어구 자동 돌리기: 주스탯% 합계 -->
+         <div data-auto-kind="stat" style="margin-top:10px;">
+           <label style="margin-bottom:4px;">장신구/방어구 자동 돌리기 (주스탯 %)</label>
+-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+-            주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
+-            쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
+-          </div>
++          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
++            주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
++            "올스탯(제논 용)"은 STR/DEX/LUK을 각각 1/3 합산하며 올스탯%도 포함<br>
++            쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
++          </div>
+ 
+           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+             <label for="armorAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
+             <input type="number" id="armorAutoTarget" value="0" min="0" max="39" style="max-width:80px;" />
+           </div>
+ 
+           <div id="armorCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+             <label for="armorCooldownMin" style="margin:0; font-size:0.85rem;">목표 최소 쿨감</label>
+             <select id="armorCooldownMin" style="max-width:110px;">
+               <option value="0">0초</option>
+               <option value="1">1초</option>
+               <option value="2">2초</option>
+               <option value="3">3초</option>
+               <option value="4">4초</option>
+               <option value="5">5초</option>
+               <option value="6">6초</option>
+             </select>
+           </div>
+ 
+           <div id="armorCritRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+             <label for="armorCritMin" style="margin:0; font-size:0.85rem;">목표 최소 크뎀 줄 수</label>
+             <select id="armorCritMin" style="max-width:110px;">
+               <option value="0">없음</option>
+               <option value="1">크</option>
+               <option value="2">크크</option>

@@ -120,6 +120,9 @@
     if (statType === "ANY") {
       return ["STR", "DEX", "INT", "LUK"];
     }
+    if (statType === "ALLSTAT") {
+      return ["STR", "DEX", "LUK"];
+    }
     return [statType];
   }
 
@@ -161,7 +164,7 @@
   }
 
   function getStatTotalsInSet(candLines) {
-    const totals = { STR: 0, DEX: 0, INT: 0, LUK: 0 };
+    const totals = { STR: 0, DEX: 0, INT: 0, LUK: 0, ALLSTAT: 0 };
     if (!Array.isArray(candLines)) return totals;
     for (const line of candLines) {
       const text = line.optionText || "";
@@ -176,10 +179,7 @@
       if (allMatch) {
         const value = parseInt(allMatch[1], 10);
         if (!isNaN(value)) {
-          totals.STR += value;
-          totals.DEX += value;
-          totals.INT += value;
-          totals.LUK += value;
+          totals.ALLSTAT += value;
         }
       }
     }
@@ -189,9 +189,17 @@
   function getStatTotalByType(candLines, statType) {
     const totals = getStatTotalsInSet(candLines);
     if (statType === "ANY") {
-      return Math.max(totals.STR, totals.DEX, totals.INT, totals.LUK);
+      return Math.max(
+        totals.STR + totals.ALLSTAT,
+        totals.DEX + totals.ALLSTAT,
+        totals.INT + totals.ALLSTAT,
+        totals.LUK + totals.ALLSTAT
+      );
     }
-    return totals[statType] || 0;
+    if (statType === "ALLSTAT") {
+      return totals.ALLSTAT + (totals.STR + totals.DEX + totals.LUK) / 3;
+    }
+    return (totals[statType] || 0) + totals.ALLSTAT;
   }
 
   function getCooldownTotal(candLines) {
@@ -245,6 +253,7 @@
   function isMainStatPercentLine(line, statType) {
     const text = (line && line.optionText) ? line.optionText : "";
     const types = getAdditionalMainStatTypes(statType);
+    if (statType === "ALLSTAT" && isAllStatPercentLine(line)) return true;
     return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
   }
 
@@ -293,9 +302,21 @@
     );
   }
 
+  function isAllStatSelection(statType) {
+    return statType === "ALLSTAT";
+  }
+
   function isAdditionalStatValidSet(candLines, criteria) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
+    const allStatCount = isAllStatSelection(criteria.statType)
+      ? countLines(candLines, isAllStatPercentLine)
+      : 0;
+
+    if (isAllStatSelection(criteria.statType)) {
+      if (criteria.requiredLines === 2 && allStatCount < 1) return false;
+      if (criteria.requiredLines === 3 && allStatCount < 2) return false;
+    }
 
     if (criteria.requiredLines === 2) {
       return validCount >= 2;
