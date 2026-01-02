@@ -275,15 +275,21 @@
     }
 
     if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
-      if (getCooldownTotal(candLines) >= criteria.minCooldown) return true;
+      const cooldownTotal = getCooldownTotal(candLines);
+      if (cooldownTotal >= criteria.minCooldown + 2) return true;
+      return statTotal >= criteria.targetPercent && cooldownTotal >= criteria.minCooldown;
     }
 
     if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
-      if (countCritDamageLines(candLines) >= criteria.minCritLines) return true;
+      const critLines = countCritDamageLines(candLines);
+      if (critLines >= criteria.minCritLines + 1) return true;
+      return statTotal >= criteria.targetPercent && critLines >= criteria.minCritLines;
     }
 
     if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
-      if (countDropMesoLines(candLines) >= criteria.minDropMesoLines) return true;
+      const dropMesoLines = countDropMesoLines(candLines);
+      if (dropMesoLines >= criteria.minDropMesoLines + 1) return true;
+      return statTotal >= criteria.targetPercent && dropMesoLines >= criteria.minDropMesoLines;
     }
 
     return statTotal >= criteria.targetPercent;
