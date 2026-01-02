@@ -412,15 +412,16 @@
             <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
             <label><input type="radio" name="mainStat" value="INT" />INT</label>
             <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
+            <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
           </div>
         </div>
       </div>
 
       <!-- 무기 전용 자동 돌리기 설정 UI -->
       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
-        <label style="margin-bottom:4px;">자동 돌리기 설정 (무기/보조무기/엠블렘)</label>
+        <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-          무기/보조무기/엠블렘에서만 사용 가능 (방어구는 추후 업데이트 예정)<br>
+          무기류: 보공/방무/공마 조합, 장신구/방어구: 주스탯% 자동 돌리기 제공<br>
           예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
           예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
         </div>
@@ -459,6 +460,54 @@
               <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최소 보공 몇 줄</label>
               <select id="autoMainBossMin" style="max-width:110px;"></select>
             </div>
+          </div>
+        </div>
+
+        <!-- 장신구/방어구 자동 돌리기: 주스탯% 합계 -->
+        <div data-auto-kind="stat" style="margin-top:10px;">
+          <label style="margin-bottom:4px;">장신구/방어구 자동 돌리기 (주스탯 %)</label>
+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+            선택한 주스탯 + 올스탯 % 합이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용합니다.
+          </div>
+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+            장갑은 크뎀 1줄을 주스탯 32%로 환산해 합산합니다.
+          </div>
+
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <label for="armorAutoTarget" style="margin:0; font-size:0.85rem;">목표 %</label>
+            <input type="number" id="armorAutoTarget" value="12" min="1" max="100" style="max-width:80px;" />
+          </div>
+
+          <div id="armorCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <label for="armorCooldownMin" style="margin:0; font-size:0.85rem;">모자 쿨감 최소 합</label>
+            <select id="armorCooldownMin" style="max-width:110px;">
+              <option value="0">없음</option>
+              <option value="1">-1초</option>
+              <option value="2">-2초</option>
+              <option value="3">-3초</option>
+              <option value="4">-4초</option>
+              <option value="5">-5초</option>
+              <option value="6">-6초</option>
+            </select>
+          </div>
+
+          <div id="armorCritRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <label for="armorCritMin" style="margin:0; font-size:0.85rem;">장갑 크뎀 최소 줄</label>
+            <select id="armorCritMin" style="max-width:110px;">
+              <option value="0">0줄</option>
+              <option value="1">1줄</option>
+              <option value="2">2줄</option>
+              <option value="3">3줄</option>
+            </select>
+          </div>
+
+          <div id="accessoryDropRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <label for="accessoryDropMin" style="margin:0; font-size:0.85rem;">장신구 드/메 최소 줄</label>
+            <select id="accessoryDropMin" style="max-width:110px;">
+              <option value="0">0줄</option>
+              <option value="1">1줄</option>
+              <option value="2">2줄</option>
+            </select>
           </div>
         </div>
       </div>

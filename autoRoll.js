@@ -9,8 +9,52 @@
     EMBLEM: 2,
     SECONDARY: 3,        // 보조무기(포스실드 제외)
     FORCE_SHIELD: 4,     // 포스실드/소울링
-    SHIELD: 5            // 방패  
+    SHIELD: 5,           // 방패
+    HAT: 6,
+    TOP: 7,
+    OVERALL: 8,
+    BOTTOM: 9,
+    SHOES: 10,
+    GLOVE: 11,
+    CAPE: 12,
+    BELT: 13,
+    SHOULDER: 14,
+    FACE: 15,
+    EYE: 16,
+    EARRING: 17,
+    RING: 18,
+    PENDANT: 19,
+    HEART: 20
   };
+
+  const WEAPON_PARTS = new Set([
+    PARTS.WEAPON,
+    PARTS.EMBLEM,
+    PARTS.SECONDARY,
+    PARTS.FORCE_SHIELD,
+    PARTS.SHIELD
+  ]);
+
+  const ACCESSORY_PARTS = new Set([
+    PARTS.FACE,
+    PARTS.EYE,
+    PARTS.EARRING,
+    PARTS.RING,
+    PARTS.PENDANT
+  ]);
+
+  const ARMOR_PARTS = new Set([
+    PARTS.HAT,
+    PARTS.TOP,
+    PARTS.OVERALL,
+    PARTS.BOTTOM,
+    PARTS.SHOES,
+    PARTS.GLOVE,
+    PARTS.CAPE,
+    PARTS.BELT,
+    PARTS.SHOULDER,
+    PARTS.HEART
+  ]);
 
   const CUBE_ID_ADDI = "5062500";
   const CUBE_ID_MAIN = "5062010";
@@ -19,25 +63,29 @@
     return typeof getSelectedPartsType === "function" ? getSelectedPartsType() : 0;
   }
 
+  function isWeaponPartsType(p) {
+    return WEAPON_PARTS.has(p);
+  }
+
+  function isAccessoryPartsType(p) {
+    return ACCESSORY_PARTS.has(p);
+  }
+
+  function isArmorPartsType(p) {
+    return ARMOR_PARTS.has(p);
+  }
+
   function isSupportedParts() {
     const p = getSelectedPartsTypeSafe();
-    return (
-      p === PARTS.WEAPON ||
-      p === PARTS.EMBLEM ||
-      p === PARTS.SECONDARY ||
-      p === PARTS.FORCE_SHIELD ||
-      p === PARTS.SHIELD
-    );
+    if (isAdditionalCubeSelected()) {
+      return isWeaponPartsType(p);
+    }
+    return isWeaponPartsType(p) || isAccessoryPartsType(p) || isArmorPartsType(p);
   }
 
   function isWeaponOrSecondarySelected() {
     const p = getSelectedPartsTypeSafe();
-    return (
-      p === PARTS.WEAPON ||
-      p === PARTS.SECONDARY ||
-      p === PARTS.FORCE_SHIELD ||
-      p === PARTS.SHIELD
-    );
+    return isWeaponPartsType(p) && p !== PARTS.EMBLEM;
   }
   
   function getSelectedCubeIdSafe() {
@@ -53,6 +101,14 @@
       return getSelectedMainStat();
     }
     return "STR";
+  }
+
+  function getEffectiveMainStat() {
+    const stat = getMainStat();
+    if (stat === "ANY" && isWeaponPartsType(getSelectedPartsTypeSafe())) {
+      return "STR";
+    }
+    return stat;
   }
 
   function getMainKeyword(mainStat) {
@@ -97,6 +153,76 @@
     return sum;
   }
 
+  function getStatTotalsInSet(candLines) {
+    const totals = { STR: 0, DEX: 0, INT: 0, LUK: 0 };
+    if (!Array.isArray(candLines)) return totals;
+    for (const line of candLines) {
+      const text = line.optionText || "";
+      const statMatch = text.match(/^(STR|DEX|INT|LUK) \+(\d+)%/);
+      if (statMatch) {
+        const value = parseInt(statMatch[2], 10);
+        if (!isNaN(value)) {
+          totals[statMatch[1]] += value;
+        }
+      }
+      const allMatch = text.match(/^올스탯 \+(\d+)%/);
+      if (allMatch) {
+        const value = parseInt(allMatch[1], 10);
+        if (!isNaN(value)) {
+          totals.STR += value;
+          totals.DEX += value;
+          totals.INT += value;
+          totals.LUK += value;
+        }
+      }
+    }
+    return totals;
+  }
+
+  function getStatTotalByType(candLines, statType) {
+    const totals = getStatTotalsInSet(candLines);
+    if (statType === "ANY") {
+      return Math.max(totals.STR, totals.DEX, totals.INT, totals.LUK);
+    }
+    return totals[statType] || 0;
+  }
+
+  function getCooldownTotal(candLines) {
+    if (!Array.isArray(candLines)) return 0;
+    let sum = 0;
+    for (const line of candLines) {
+      const text = line.optionText || "";
+      const match = text.match(/재사용 대기시간 -(\d+)초/);
+      if (match) {
+        const value = parseInt(match[1], 10);
+        if (!isNaN(value)) sum += value;
+      }
+    }
+    return sum;
+  }
+
+  function countCritDamageLines(candLines) {
+    if (!Array.isArray(candLines)) return 0;
+    let count = 0;
+    for (const line of candLines) {
+      const text = line.optionText || "";
+      if (text.includes("크리티컬 데미지")) count += 1;
+    }
+    return count;
+  }
+
+  function countDropMesoLines(candLines) {
+    if (!Array.isArray(candLines)) return 0;
+    let count = 0;
+    for (const line of candLines) {
+      const text = line.optionText || "";
+      if (text.includes("메소 획득량") || text.includes("아이템 드롭률")) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
   function countLines(lines, predicate) {
     if (!Array.isArray(lines)) return 0;
     let c = 0;
@@ -106,7 +232,7 @@
 
   function isMainValidSet(candLines, partsType, iedMaxN, bossMinM) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-    const mainStat = getMainStat();
+    const mainStat = getEffectiveMainStat();
   
     const iedCount = countLines(candLines, isIEDLine);
   
@@ -138,12 +264,36 @@
     }
     return true;
   }
-  
+
+  function isStatValidSet(candLines, partsType, criteria) {
+    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+    let statTotal = getStatTotalByType(candLines, criteria.statType);
+
+    if (partsType === PARTS.GLOVE) {
+      const critLines = countCritDamageLines(candLines);
+      statTotal += critLines * 32;
+    }
+
+    if (partsType === PARTS.HAT && criteria.minCooldown > 0) {
+      if (getCooldownTotal(candLines) >= criteria.minCooldown) return true;
+    }
+
+    if (partsType === PARTS.GLOVE && criteria.minCritLines > 0) {
+      if (countCritDamageLines(candLines) >= criteria.minCritLines) return true;
+    }
+
+    if (isAccessoryPartsType(partsType) && criteria.minDropMesoLines > 0) {
+      if (countDropMesoLines(candLines) >= criteria.minDropMesoLines) return true;
+    }
+
+    return statTotal >= criteria.targetPercent;
+  }
+
 
   // ====== additional(아랫잠재) stop condition ======
   function hasSatisfiedCandidateAdditional(targetPercent) {
     if (!Array.isArray(rollCandidates)) return false;
-    const mainStat = getMainStat();
+    const mainStat = getEffectiveMainStat();
     for (const cand of rollCandidates) {
       const total = getTotalAtkPercentInSet(cand, mainStat);
       if (total >= targetPercent) {
@@ -159,6 +309,18 @@
     const partsType = getSelectedPartsTypeSafe();
     for (const cand of rollCandidates) {
       if (isMainValidSet(cand, partsType, criteria.iedMaxN, criteria.bossMinM)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ====== stat(장신구/방어구) stop condition ======
+  function hasSatisfiedCandidateStat(criteria) {
+    if (!Array.isArray(rollCandidates)) return false;
+    const partsType = getSelectedPartsTypeSafe();
+    for (const cand of rollCandidates) {
+      if (isStatValidSet(cand, partsType, criteria)) {
         return true;
       }
     }
@@ -236,13 +398,42 @@
     const container = document.getElementById("weaponAutoContainer");
     if (!container) return;
     const addi = isAdditionalCubeSelected();
+    const partsType = getSelectedPartsTypeSafe();
+    const isWeapon = isWeaponPartsType(partsType);
+    const isAccessory = isAccessoryPartsType(partsType);
+    const isArmor = isArmorPartsType(partsType);
 
     container.querySelectorAll("[data-auto-kind='main']").forEach(el => {
-      el.style.display = addi ? "none" : "block";
+      el.style.display = !addi && isWeapon ? "block" : "none";
     });
     container.querySelectorAll("[data-auto-kind='addi']").forEach(el => {
-      el.style.display = addi ? "block" : "none";
+      el.style.display = addi && isWeapon ? "block" : "none";
     });
+    container.querySelectorAll("[data-auto-kind='stat']").forEach(el => {
+      el.style.display = !addi && (isAccessory || isArmor) ? "block" : "none";
+    });
+  }
+
+  function updateMainStatAvailability() {
+    const anyRadio = document.querySelector('input[name="mainStat"][value="ANY"]');
+    if (!anyRadio) return;
+    const isWeapon = isWeaponPartsType(getSelectedPartsTypeSafe());
+    anyRadio.disabled = isWeapon;
+    if (isWeapon && anyRadio.checked) {
+      const fallback = document.querySelector('input[name="mainStat"][value="STR"]');
+      if (fallback) fallback.checked = true;
+    }
+  }
+
+  function updateSpecialOptionVisibility() {
+    const partsType = getSelectedPartsTypeSafe();
+    const cooldownRow = document.getElementById("armorCooldownRow");
+    const critRow = document.getElementById("armorCritRow");
+    const dropRow = document.getElementById("accessoryDropRow");
+
+    if (cooldownRow) cooldownRow.style.display = partsType === PARTS.HAT ? "flex" : "none";
+    if (critRow) critRow.style.display = partsType === PARTS.GLOVE ? "flex" : "none";
+    if (dropRow) dropRow.style.display = isAccessoryPartsType(partsType) ? "flex" : "none";
   }
 
   function refreshAutoPanelVisibility() {
@@ -264,6 +455,8 @@
 
     updateBossMinOptions();
     setAutoKindVisibility();
+    updateSpecialOptionVisibility();
+    updateMainStatAvailability();
     updateAutoButton(autoRunning);
   }
 
@@ -285,7 +478,7 @@
       // 3줄 합산 %가 목표 이상인 세트가 하나라도 있으면 종료
       if (hasSatisfiedCandidateAdditional(payload.targetPercent)) {
         applyAutoHitUIForCandidates(cand => {
-          const mainStat = getMainStat();
+          const mainStat = getEffectiveMainStat();
           return getTotalAtkPercentInSet(cand, mainStat) >= payload.targetPercent;
         });
         stopAuto();
@@ -302,6 +495,15 @@
         stopAuto();
         return;
       }      
+    } else if (payload && payload.mode === "stat") {
+      if (hasSatisfiedCandidateStat(payload.criteria)) {
+        const partsType = getSelectedPartsTypeSafe();
+        applyAutoHitUIForCandidates(cand => {
+          return isStatValidSet(cand, partsType, payload.criteria);
+        });
+        stopAuto();
+        return;
+      }
     }
 
     // 다시 반복
@@ -312,12 +514,16 @@
     if (autoRunning) return;
 
     if (!isSupportedParts()) {
-      alert("자동 돌리기는 무기/보조무기/엠블렘 부위에서만 사용할 수 있습니다.");
+      alert("선택한 부위/큐브 종류에서는 자동 돌리기를 사용할 수 없습니다.");
       return;
     }
 
     if (isAdditionalCubeSelected()) {
       // ====== additional(에디) ======
+      if (!isWeaponPartsType(getSelectedPartsTypeSafe())) {
+        alert("아랫잠재 자동 돌리기는 무기류에서만 사용할 수 있습니다.");
+        return;
+      }
       const targetInput = document.getElementById("weaponAutoTarget");
       if (!targetInput) {
         alert("자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
@@ -332,6 +538,55 @@
       autoRunning = true;
       updateAutoButton(true);
       autoStep({ mode: "addi", targetPercent });
+      return;
+    }
+
+    const partsType = getSelectedPartsTypeSafe();
+    if (!isWeaponPartsType(partsType)) {
+      // ====== stat(장신구/방어구) ======
+      const targetInput = document.getElementById("armorAutoTarget");
+      if (!targetInput) {
+        alert("장신구/방어구 자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
+        return;
+      }
+      const targetPercent = Number(targetInput.value);
+      if (isNaN(targetPercent) || targetPercent < 0) {
+        alert("올바른 목표 %를 입력해주세요.");
+        return;
+      }
+
+      const statType = getMainStat();
+
+      let minCooldown = 0;
+      const cooldownSelect = document.getElementById("armorCooldownMin");
+      if (cooldownSelect && partsType === PARTS.HAT) {
+        minCooldown = Number(cooldownSelect.value);
+      }
+
+      let minCritLines = 0;
+      const critSelect = document.getElementById("armorCritMin");
+      if (critSelect && partsType === PARTS.GLOVE) {
+        minCritLines = Number(critSelect.value);
+      }
+
+      let minDropMesoLines = 0;
+      const dropSelect = document.getElementById("accessoryDropMin");
+      if (dropSelect && isAccessoryPartsType(partsType)) {
+        minDropMesoLines = Number(dropSelect.value);
+      }
+
+      autoRunning = true;
+      updateAutoButton(true);
+      autoStep({
+        mode: "stat",
+        criteria: {
+          targetPercent,
+          statType,
+          minCooldown,
+          minCritLines,
+          minDropMesoLines
+        }
+      });
       return;
     }
 
