@@ -1,148 +1,132 @@
 diff --git a/index.html b/index.html
-index 321400de24a4e9d02b22c5ee1b17911514838c69..ef3f74dcbf687ee52fc20105318172b607e759f9 100644
+index 9830aef623313db9dcf75cf9da7b4d582b7bcfbc..93e333f81725a588822df9fd54157258d71a10e0 100644
 --- a/index.html
 +++ b/index.html
-@@ -386,128 +386,130 @@
-             <option value="10">신발</option>
-             <option value="11">장갑</option>
-             <option value="12">망토</option>
-             <option value="13">벨트</option>
-             <option value="14">어깨장식</option>
-             <option value="15">얼굴장식</option>
-             <option value="16">눈장식</option>
-             <option value="17">귀고리</option>
-             <option value="18">반지</option>
-             <option value="19">펜던트</option>
-             <option value="20">기계심장</option>
-           </select>
+@@ -543,55 +543,56 @@
+           <div class="option-inner">
+             <div class="option-lines" id="lines-current"></div>
+           </div>
          </div>
-       </div>
  
-       <div class="row">
-         <div>
-           <label>잠재능력 재설정 종류</label>
-           <label><input type="radio" name="cubeKind" value="black" checked />윗잠재 (블랙큐브)</label>
-           <label><input type="radio" name="cubeKind" value="meister" />명장의 큐브</label>
-           <label><input type="radio" name="cubeKind" value="addi" />아랫잠재 (에디셔널 큐브)</label>
+         <div class="option-box candidate" id="box-roll1" data-choice="1">
+           <div class="option-title">재설정 1</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll1"></div>
+           </div>
          </div>
-         <div>
-           <label>주스탯</label>
-           <div>
--            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
--            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
--            <label><input type="radio" name="mainStat" value="INT" />INT</label>
--            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
--            <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
-+            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
-+            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
-+            <label><input type="radio" name="mainStat" value="INT" />INT</label>
-+            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
-+            <label><input type="radio" name="mainStat" value="ALLSTAT" />올스탯 (제논 용)</label>
-+            <label><input type="radio" name="mainStat" value="ANY" />아무거나</label>
+         <div class="option-box candidate" id="box-roll2" data-choice="2">
+           <div class="option-title">재설정 2</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll2"></div>
+           </div>
+         </div>
+         <div class="option-box candidate" id="box-roll3" data-choice="3">
+           <div class="option-title">재설정 3</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll3"></div>
            </div>
          </div>
        </div>
  
-       <!-- 무기 전용 자동 돌리기 설정 UI -->
-       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
-         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
-         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-           무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
+-      <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+-        <!-- 자동 돌리기 시작/정지 버튼 -->
+-        <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
+-        <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
+-      </div>
++      <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
++        <!-- 자동 돌리기 시작/정지 버튼 -->
++        <button class="btn btn-secondary" id="autoResetBtn">리셋</button>
++        <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
++        <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
++      </div>
+     </section>
+ 
+     <!-- 3. 재설정 현황 -->
+     <section class="card" id="card-stats">
+       <h2>재설정 현황</h2>
+       <div class="stats-row">
+         <div id="rollCountTag">재설정 횟수: 0</div>
+         <div id="mesoTag">소모 메소: 0 메소</div>
+         <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
+         <div id="cubeTypeTag" class="tag">
+           <span class="tag-dot"></span>
+           <span>윗잠재</span>
          </div>
+       </div>
+     </section>
  
-         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
-         <div data-auto-kind="addi-weapon">
-           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
-           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
-             공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
-           </div>
-           <div style="display:flex; align-items:center; gap:8px;">
-             <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
-             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
-           </div>
+     <!-- 4. 로그 (토글 가능) -->
+     <section class="card" id="card-log">
+       <h2>
+         <div class="log-header-row">
+           <span>로그 (최근 100회)</span>
+           <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
          </div>
+       </h2>
+       <div id="log" style="display:none;"></div>
+@@ -1009,56 +1010,59 @@
  
-         <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
-         <div data-auto-kind="addi-stat" style="margin-top:10px;">
-           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
--          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
--            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
--            2줄 또는 3줄 만족 유효옵션으로 취급
--          </div>
-+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-+            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
-+            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)
-+          </div>
-           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
-             <select id="additionalAutoLines" style="max-width:110px;">
-               <option value="2">2줄</option>
-               <option value="3">3줄</option>
-             </select>
-           </div>
-         </div>
+       const boxId = `box-roll${idx + 1}`;
+       const candBox = document.getElementById(boxId);
+       const currentBox = document.getElementById("box-current");
  
-         <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
-         <div data-auto-kind="main" style="margin-top:10px;">
-           <label style="margin-bottom:4px;">무보엠류 자동 돌리기 (유효 옵션 조합)</label>
-           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-             최소 조건을 만족하는 후보가 나오면 자동으로 멈춥니다. <br>
-             예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
-             예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
-           </div>
+       candBox.classList.remove("fade-out-card");
+       void candBox.offsetWidth;
+       candBox.classList.add("fade-out-card");
  
-           <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
-             <div style="display:flex; align-items:center; gap:8px;">
-               <label for="autoMainIED" style="margin:0; font-size:0.85rem;">최대 방무 몇 줄</label>
-               <select id="autoMainIED" style="max-width:110px;">
-                 <option value="0">0</option>
-                 <option value="1">1</option>
-                 <option value="2">2</option>
-                 <option value="3">3</option>
-               </select>
-             </div>
+       candBox.addEventListener("animationend", () => {
+         candBox.classList.remove("fade-out-card");
  
-             <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
-               <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최소 보공 몇 줄</label>
-               <select id="autoMainBossMin" style="max-width:110px;"></select>
-             </div>
-           </div>
-         </div>
+         currentLines = cand.map(l => ({...l}));
+         renderAllBoxes();
  
-         <!-- 장신구/방어구 자동 돌리기: 주스탯% 합계 -->
-         <div data-auto-kind="stat" style="margin-top:10px;">
-           <label style="margin-bottom:4px;">장신구/방어구 자동 돌리기 (주스탯 %)</label>
--          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
--            주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
--            쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
--          </div>
-+          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-+            주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
-+            "올스탯(제논 용)"은 STR/DEX/LUK을 각각 1/3 합산하며 올스탯%도 포함<br>
-+            쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
-+          </div>
+         currentBox.classList.remove("fade-in-card");
+         void currentBox.offsetWidth;
+         currentBox.classList.add("fade-in-card");
+         currentBox.addEventListener("animationend", () => {
+           currentBox.classList.remove("fade-in-card");
+         }, { once:true });
+       }, { once:true });
+     }
  
-           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-             <label for="armorAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
-             <input type="number" id="armorAutoTarget" value="0" min="0" max="39" style="max-width:80px;" />
-           </div>
+     // ============= 이벤트 바인딩 =============
+-    document.getElementById("applyResetBtn").addEventListener("click", () => {
+-      meisterUsed = 0;
+-      mesoUsed = 0;
+-      rollCount = 0;
+-      initCurrentOption();
+-    });
++    function handleReset() {
++      meisterUsed = 0;
++      mesoUsed = 0;
++      rollCount = 0;
++      initCurrentOption();
++    }
++
++    document.getElementById("applyResetBtn").addEventListener("click", handleReset);
++    document.getElementById("autoResetBtn").addEventListener("click", handleReset);
  
-           <div id="armorCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-             <label for="armorCooldownMin" style="margin:0; font-size:0.85rem;">목표 최소 쿨감</label>
-             <select id="armorCooldownMin" style="max-width:110px;">
-               <option value="0">0초</option>
-               <option value="1">1초</option>
-               <option value="2">2초</option>
-               <option value="3">3초</option>
-               <option value="4">4초</option>
-               <option value="5">5초</option>
-               <option value="6">6초</option>
-             </select>
-           </div>
  
-           <div id="armorCritRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-             <label for="armorCritMin" style="margin:0; font-size:0.85rem;">목표 최소 크뎀 줄 수</label>
-             <select id="armorCritMin" style="max-width:110px;">
-               <option value="0">없음</option>
-               <option value="1">크</option>
-               <option value="2">크크</option>
+     document.getElementById("rollBtn").addEventListener("click", () => {
+       doOneRollStep();
+     });
+ 
+     document.querySelectorAll(".option-box.candidate").forEach(box => {
+       box.addEventListener("click", (e) => {
+         const idx = Number(e.currentTarget.getAttribute("data-choice")) - 1;
+         chooseCandidate(idx);
+       });
+     });
+ 
+     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+       r.addEventListener("change", () => {
+         // 큐브 타입 변경 시 통계 초기화
+         meisterUsed = 0;
+         mesoUsed = 0;
+         rollCount = 0;
+ 
+         updateCubeTag();
+         initCurrentOption();
+       });
+     });
+ 

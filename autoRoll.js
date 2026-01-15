@@ -810,6 +810,13 @@
         });
       }
 
+      const autoResetBtn = document.getElementById("autoResetBtn");
+      if (autoResetBtn) {
+        autoResetBtn.addEventListener("click", () => {
+          clearAutoHitUI();
+        });
+      }
+
       // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
       document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
         r.addEventListener("change", () => {

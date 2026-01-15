@@ -567,6 +567,7 @@
 
       <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
         <!-- 자동 돌리기 시작/정지 버튼 -->
+        <button class="btn btn-secondary" id="autoResetBtn">리셋</button>
         <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
         <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
       </div>
@@ -1031,12 +1032,15 @@
     }
 
     // ============= 이벤트 바인딩 =============
-    document.getElementById("applyResetBtn").addEventListener("click", () => {
+    function handleReset() {
       meisterUsed = 0;
       mesoUsed = 0;
       rollCount = 0;
       initCurrentOption();
-    });
+    }
+
+    document.getElementById("applyResetBtn").addEventListener("click", handleReset);
+    document.getElementById("autoResetBtn").addEventListener("click", handleReset);
 
 
     document.getElementById("rollBtn").addEventListener("click", () => {

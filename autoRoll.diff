@@ -1,339 +1,74 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index 5297bc550234544390a1a16e0be7b0c1eceb3a69..9afdddd5cc24071fe0101f216352311423fd3dbf 100644
+index 783315baca7f7014f7d31e445988399054a3b28d..0f42d2dd4f5e819adb4acdc38564840b5c287070 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -94,241 +94,262 @@
- 
-   function isAdditionalCubeSelected() {
-     return getSelectedCubeIdSafe() === CUBE_ID_ADDI;
+@@ -781,56 +781,63 @@
+     autoStep({ mode: "main", criteria: { iedMaxN, bossMinM } });
+     
    }
  
-   function getMainStat() {
-     if (typeof getSelectedMainStat === "function") {
-       return getSelectedMainStat();
+   function stopAuto() {
+     autoRunning = false;
+     if (autoTimer) {
+       clearTimeout(autoTimer);
+       autoTimer = null;
      }
-     return "STR";
+     updateAutoButton(false);
    }
  
-   function getEffectiveMainStat() {
-     const stat = getMainStat();
-     if (stat === "ANY" && isWeaponPartsType(getSelectedPartsTypeSafe())) {
-       return "STR";
-     }
-     return stat;
-   }
- 
-   function getMainKeyword(mainStat) {
-     // 기존 mainStat INT이면 "마력" 기준을 유지
-     return mainStat === "INT" ? "마력" : "공격력";
-   }
- 
--  function getAdditionalMainStatTypes(statType) {
--    if (statType === "ANY") {
--      return ["STR", "DEX", "INT", "LUK"];
--    }
--    return [statType];
--  }
-+  function getAdditionalMainStatTypes(statType) {
-+    if (statType === "ANY") {
-+      return ["STR", "DEX", "INT", "LUK"];
-+    }
-+    if (statType === "ALLSTAT") {
-+      return ["STR", "DEX", "LUK"];
-+    }
-+    return [statType];
-+  }
- 
-   // ====== Line identifier helpers (옵션 텍스트 기반) ======
-   function isIEDLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     // "몬스터 방어율 무시" / "방어율 무시" 등 폭넓게 수용
-     return text.includes("방어") && text.includes("무시") && (text.includes("율") || text.includes("방어력"));
-   }
- 
-   function isBossLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return (text.includes("보스") && text.includes("데미지")) || text.includes("보스 몬스터") || text.includes("보스 공격");
-   }
- 
-   function isAtkLine(line, mainStat) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const keyword = getMainKeyword(mainStat);
-     if (!text.includes(keyword)) return false;
-     // % 기반 옵션만 인정
-     return /\+(\d+)%/.test(text);
-   }
- 
-   // candLines: rollOneSet으로 나온 3줄짜리 배열
-   // 👉 세 줄에 포함된 공격력/마력 %를 모두 합산
-   function getTotalAtkPercentInSet(candLines, mainStat) {
-     if (!candLines) return 0;
-     const keyword = getMainKeyword(mainStat);
-     let sum = 0;
-     for (const line of candLines) {
-       const text = line.optionText || "";
-       if (!text.includes(keyword)) continue;
-       const m = text.match(/\+(\d+)%/);
-       if (!m) continue;
-       const val = parseInt(m[1], 10);
-       if (!isNaN(val)) sum += val;
-     }
-     return sum;
-   }
- 
--  function getStatTotalsInSet(candLines) {
--    const totals = { STR: 0, DEX: 0, INT: 0, LUK: 0 };
--    if (!Array.isArray(candLines)) return totals;
--    for (const line of candLines) {
--      const text = line.optionText || "";
--      const statMatch = text.match(/^(STR|DEX|INT|LUK) \+(\d+)%/);
--      if (statMatch) {
--        const value = parseInt(statMatch[2], 10);
--        if (!isNaN(value)) {
--          totals[statMatch[1]] += value;
--        }
+   // DOM 준비 후 이벤트 연결
+   window.addEventListener("DOMContentLoaded", () => {
+     const autoBtn = document.getElementById("autoRollBtn");
+     if (autoBtn) {
+       autoBtn.addEventListener("click", () => {
+         if (autoRunning) {
+           stopAuto();
+         } else {
+           startAuto();
+         }
+       });
+       // 적용 및 리셋 클릭 시 하이라이트 제거
+-      const applyResetBtn = document.getElementById("applyResetBtn");
+-      if (applyResetBtn) {
+-        applyResetBtn.addEventListener("click", () => {
+-          clearAutoHitUI();
+-        });
 -      }
--      const allMatch = text.match(/^올스탯 \+(\d+)%/);
--      if (allMatch) {
--        const value = parseInt(allMatch[1], 10);
--        if (!isNaN(value)) {
--          totals.STR += value;
--          totals.DEX += value;
--          totals.INT += value;
--          totals.LUK += value;
--        }
--      }
--    }
--    return totals;
--  }
--
--  function getStatTotalByType(candLines, statType) {
--    const totals = getStatTotalsInSet(candLines);
--    if (statType === "ANY") {
--      return Math.max(totals.STR, totals.DEX, totals.INT, totals.LUK);
--    }
--    return totals[statType] || 0;
--  }
-+  function getStatTotalsInSet(candLines) {
-+    const totals = { STR: 0, DEX: 0, INT: 0, LUK: 0, ALLSTAT: 0 };
-+    if (!Array.isArray(candLines)) return totals;
-+    for (const line of candLines) {
-+      const text = line.optionText || "";
-+      const statMatch = text.match(/^(STR|DEX|INT|LUK) \+(\d+)%/);
-+      if (statMatch) {
-+        const value = parseInt(statMatch[2], 10);
-+        if (!isNaN(value)) {
-+          totals[statMatch[1]] += value;
-+        }
++      const applyResetBtn = document.getElementById("applyResetBtn");
++      if (applyResetBtn) {
++        applyResetBtn.addEventListener("click", () => {
++          clearAutoHitUI();
++        });
 +      }
-+      const allMatch = text.match(/^올스탯 \+(\d+)%/);
-+      if (allMatch) {
-+        const value = parseInt(allMatch[1], 10);
-+        if (!isNaN(value)) {
-+          totals.ALLSTAT += value;
-+        }
++
++      const autoResetBtn = document.getElementById("autoResetBtn");
++      if (autoResetBtn) {
++        autoResetBtn.addEventListener("click", () => {
++          clearAutoHitUI();
++        });
 +      }
-+    }
-+    return totals;
-+  }
-+
-+  function getStatTotalByType(candLines, statType) {
-+    const totals = getStatTotalsInSet(candLines);
-+    if (statType === "ANY") {
-+      return Math.max(
-+        totals.STR + totals.ALLSTAT,
-+        totals.DEX + totals.ALLSTAT,
-+        totals.INT + totals.ALLSTAT,
-+        totals.LUK + totals.ALLSTAT
-+      );
-+    }
-+    if (statType === "ALLSTAT") {
-+      return totals.ALLSTAT + (totals.STR + totals.DEX + totals.LUK) / 3;
-+    }
-+    return (totals[statType] || 0) + totals.ALLSTAT;
-+  }
  
-   function getCooldownTotal(candLines) {
-     if (!Array.isArray(candLines)) return 0;
-     let sum = 0;
-     for (const line of candLines) {
-       const text = line.optionText || "";
-       const match = text.match(/재사용 대기시간 -(\d+)초/);
-       if (match) {
-         const value = parseInt(match[1], 10);
-         if (!isNaN(value)) sum += value;
+       // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
+       document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+         r.addEventListener("change", () => {
+           clearAutoHitUI();
+         });
+       });
+ 
+       // 부위 변경 시에도 남아있으면 혼동되므로 제거(권장)
+       const partsSelect2 = document.getElementById("partsType");
+       if (partsSelect2) {
+         partsSelect2.addEventListener("change", () => {
+           clearAutoHitUI();
+         });
        }
      }
-     return sum;
-   }
  
-   function countCritDamageLines(candLines) {
-     if (!Array.isArray(candLines)) return 0;
-     let count = 0;
-     for (const line of candLines) {
-       const text = line.optionText || "";
-       if (text.includes("크리티컬 데미지")) count += 1;
+     const partsSelect = document.getElementById("partsType");
+     if (partsSelect) {
+       partsSelect.addEventListener("change", refreshAutoPanelVisibility);
      }
-     return count;
-   }
  
-   function countDropMesoLines(candLines) {
-     if (!Array.isArray(candLines)) return 0;
-     let count = 0;
-     for (const line of candLines) {
-       const text = line.optionText || "";
-       if (text.includes("메소 획득량") || text.includes("아이템 드롭률")) {
-         count += 1;
-       }
-     }
-     return count;
-   }
- 
-   function countLines(lines, predicate) {
-     if (!Array.isArray(lines)) return 0;
-     let c = 0;
-     for (const l of lines) if (predicate(l)) c++;
-     return c;
-   }
- 
-   function isAllStatPercentLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return /^올스탯 \+\d+%$/.test(text);
-   }
- 
--  function isMainStatPercentLine(line, statType) {
--    const text = (line && line.optionText) ? line.optionText : "";
--    const types = getAdditionalMainStatTypes(statType);
--    return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
--  }
-+  function isMainStatPercentLine(line, statType) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    const types = getAdditionalMainStatTypes(statType);
-+    if (statType === "ALLSTAT" && isAllStatPercentLine(line)) return true;
-+    return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
-+  }
- 
--  function isMainStatFlatLine(line, statType) {
--    const text = (line && line.optionText) ? line.optionText : "";
--    const types = getAdditionalMainStatTypes(statType);
--    return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
--  }
-+  function isMainStatFlatLine(line, statType) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    const types = getAdditionalMainStatTypes(statType);
-+    return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
-+  }
- 
-   function isAdditionalAttackFlatLine(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     if (statType === "INT") {
-       return /^마력 \+\d+$/.test(text);
-     }
-     if (statType === "ANY") {
-       return /^(공격력|마력) \+\d+$/.test(text);
-     }
-     return /^공격력 \+\d+$/.test(text);
-   }
- 
-   function isAdditionalCritDamageLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return /^크리티컬 데미지 \+\d+%$/.test(text);
-   }
- 
-   function isAdditionalCooldownLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return text === "스킬 재사용 대기시간 -1초";
-   }
- 
--  function isAdditionalPerLevelStatLine(line, statType) {
--    const text = (line && line.optionText) ? line.optionText : "";
--    const types = getAdditionalMainStatTypes(statType);
--    return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
--  }
--
--  function isAdditionalValidLine(line, statType) {
-+  function isAdditionalPerLevelStatLine(line, statType) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    const types = getAdditionalMainStatTypes(statType);
-+    return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
-+  }
-+
-+  function isAdditionalValidLine(line, statType) {
-     return (
-       isMainStatPercentLine(line, statType) ||
-       isAllStatPercentLine(line) ||
-       isMainStatFlatLine(line, statType) ||
-       isAdditionalAttackFlatLine(line, statType) ||
-       isAdditionalCritDamageLine(line) ||
-       isAdditionalCooldownLine(line) ||
-       isAdditionalPerLevelStatLine(line, statType)
-     );
--  }
--
--  function isAdditionalStatValidSet(candLines, criteria) {
--    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
--    const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
--
--    if (criteria.requiredLines === 2) {
--      return validCount >= 2;
--    }
--
--    if (validCount >= 3) return true;
--
--    const firstLine = candLines[0];
--    const secondLine = candLines[1];
--    const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
--    const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
-+  }
-+
-+  function isAllStatSelection(statType) {
-+    return statType === "ALLSTAT";
-+  }
-+
-+  function isAdditionalStatValidSet(candLines, criteria) {
-+    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-+    const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
-+    const allStatCount = isAllStatSelection(criteria.statType)
-+      ? countLines(candLines, isAllStatPercentLine)
-+      : 0;
-+
-+    if (isAllStatSelection(criteria.statType)) {
-+      if (criteria.requiredLines === 2 && allStatCount < 1) return false;
-+      if (criteria.requiredLines === 3 && allStatCount < 2) return false;
-+    }
-+
-+    if (criteria.requiredLines === 2) {
-+      return validCount >= 2;
-+    }
-+
-+    if (validCount >= 3) return true;
-+
-+    const firstLine = candLines[0];
-+    const secondLine = candLines[1];
-+    const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
-+    const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
-     return firstIsMainPercent && secondIsMainPercent;
-   }
- 
-   function isMainValidSet(candLines, partsType, iedMaxN, bossMinM) {
-     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-     const mainStat = getEffectiveMainStat();
-   
-     const iedCount = countLines(candLines, isIEDLine);
-   
-     // ✅ 변경: "정확히 N"이 아니라 "최대 N" (0~N 허용)
-     if (iedCount > iedMaxN) return false;
-   
-     if (partsType === PARTS.EMBLEM) {
-       // 엠블렘: Boss 없음 (혹시 데이터에 섞이면 무효 처리)
-       const bossCount = countLines(candLines, isBossLine);
-       if (bossCount > 0) return false;
-   
-       // IED가 아닌 줄은 전부 ATK/MATK% 이어야 함
-       for (const l of candLines) {
-         if (isIEDLine(l)) continue;
-         if (!isAtkLine(l, mainStat)) return false;
-       }
-       return true;
-     }
-   
+     // cubeKind 변경 시 (윗/에디) UI 토글
+     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+       r.addEventListener("change", () => {
