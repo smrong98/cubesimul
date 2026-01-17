@@ -1,132 +1,127 @@
 diff --git a/index.html b/index.html
-index 9830aef623313db9dcf75cf9da7b4d582b7bcfbc..93e333f81725a588822df9fd54157258d71a10e0 100644
+index cf123d424d9e2da4c4228d6db480d6e6ea8178a5..1c4557556a1e960e6f5808f7f205d41f710b691c 100644
 --- a/index.html
 +++ b/index.html
-@@ -543,55 +543,56 @@
-           <div class="option-inner">
-             <div class="option-lines" id="lines-current"></div>
-           </div>
-         </div>
- 
-         <div class="option-box candidate" id="box-roll1" data-choice="1">
-           <div class="option-title">재설정 1</div>
-           <div class="option-inner">
-             <div class="option-lines" id="lines-roll1"></div>
-           </div>
-         </div>
-         <div class="option-box candidate" id="box-roll2" data-choice="2">
-           <div class="option-title">재설정 2</div>
-           <div class="option-inner">
-             <div class="option-lines" id="lines-roll2"></div>
-           </div>
-         </div>
-         <div class="option-box candidate" id="box-roll3" data-choice="3">
-           <div class="option-title">재설정 3</div>
-           <div class="option-inner">
-             <div class="option-lines" id="lines-roll3"></div>
-           </div>
-         </div>
-       </div>
- 
--      <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
--        <!-- 자동 돌리기 시작/정지 버튼 -->
--        <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
--        <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
--      </div>
-+      <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
-+        <!-- 자동 돌리기 시작/정지 버튼 -->
-+        <button class="btn btn-secondary" id="autoResetBtn">리셋</button>
-+        <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
-+        <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
-+      </div>
-     </section>
- 
-     <!-- 3. 재설정 현황 -->
-     <section class="card" id="card-stats">
-       <h2>재설정 현황</h2>
-       <div class="stats-row">
-         <div id="rollCountTag">재설정 횟수: 0</div>
-         <div id="mesoTag">소모 메소: 0 메소</div>
-         <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
-         <div id="cubeTypeTag" class="tag">
-           <span class="tag-dot"></span>
-           <span>윗잠재</span>
-         </div>
-       </div>
-     </section>
- 
-     <!-- 4. 로그 (토글 가능) -->
-     <section class="card" id="card-log">
-       <h2>
-         <div class="log-header-row">
-           <span>로그 (최근 100회)</span>
-           <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
-         </div>
-       </h2>
-       <div id="log" style="display:none;"></div>
-@@ -1009,56 +1010,59 @@
- 
-       const boxId = `box-roll${idx + 1}`;
-       const candBox = document.getElementById(boxId);
-       const currentBox = document.getElementById("box-current");
- 
-       candBox.classList.remove("fade-out-card");
-       void candBox.offsetWidth;
-       candBox.classList.add("fade-out-card");
- 
-       candBox.addEventListener("animationend", () => {
-         candBox.classList.remove("fade-out-card");
- 
-         currentLines = cand.map(l => ({...l}));
-         renderAllBoxes();
- 
-         currentBox.classList.remove("fade-in-card");
-         void currentBox.offsetWidth;
-         currentBox.classList.add("fade-in-card");
-         currentBox.addEventListener("animationend", () => {
-           currentBox.classList.remove("fade-in-card");
-         }, { once:true });
-       }, { once:true });
+@@ -225,72 +225,105 @@
+       }
+       45% {
+         box-shadow:
+           0 0 22px rgba(255,235,150,0.85),  /* 핵심 */
+           0 0 44px rgba(255,220,130,0.55),
+           0 0 80px rgba(255,220,130,0.35),
+           0 0 120px rgba(255,220,130,0.20),
+           0 10px 24px rgba(0,0,0,0.75);
+       }
+       100% {
+         box-shadow:
+           0 0 14px rgba(255,215,120,0.45),
+           0 0 30px rgba(255,215,120,0.32),
+           0 0 60px rgba(255,215,120,0.22),
+           0 10px 24px rgba(0,0,0,0.75);
+       }
      }
  
-     // ============= 이벤트 바인딩 =============
--    document.getElementById("applyResetBtn").addEventListener("click", () => {
--      meisterUsed = 0;
--      mesoUsed = 0;
--      rollCount = 0;
--      initCurrentOption();
--    });
-+    function handleReset() {
-+      meisterUsed = 0;
-+      mesoUsed = 0;
-+      rollCount = 0;
-+      initCurrentOption();
+ 
+     .option-box.auto-hit-flash {
+       animation: autoHitFlash 0.9s ease-out;
+     }
+ 
+ 
+ 
+-    @keyframes fadeInFast {
+-      from { opacity:0; transform:translateY(4px); }
+-      to   { opacity:1; transform:translateY(0); }
+-    }
+-    .fade-in-fast {
+-      animation:fadeInFast 0.18s ease-out;
+-    }
++    @keyframes fadeInFast {
++      from { opacity:0; transform:translateY(4px); }
++      to   { opacity:1; transform:translateY(0); }
++    }
++    .fade-in-fast {
++      animation:fadeInFast 0.18s ease-out;
++    }
+ 
+     @keyframes fadeOutCard {
+       from { opacity:1; transform:scale(1); }
+       to   { opacity:0; transform:scale(0.98); }
+     }
+-    .fade-out-card {
+-      animation:fadeOutCard 0.15s ease-out;
+-    }
+-    @keyframes fadeInCard {
+-      from { opacity:0; transform:translateY(-2px); }
+-      to   { opacity:1; transform:translateY(0); }
+-    }
+-    .fade-in-card {
+-      animation:fadeInCard 0.2s ease-out;
+-    }
++    .fade-out-card {
++      animation:fadeOutCard 0.15s ease-out;
++    }
++    @keyframes fadeInCard {
++      from { opacity:0; transform:translateY(-2px); }
++      to   { opacity:1; transform:translateY(0); }
++    }
++    .fade-in-card {
++      animation:fadeInCard 0.2s ease-out;
 +    }
 +
-+    document.getElementById("applyResetBtn").addEventListener("click", handleReset);
-+    document.getElementById("autoResetBtn").addEventListener("click", handleReset);
++    @keyframes fadeInAutoRoll {
++      0%   { opacity:0; transform:translateY(10px) scale(0.985); filter:brightness(0.7); }
++      60%  { opacity:0.9; transform:translateY(2px) scale(0.995); filter:brightness(1.15); }
++      100% { opacity:1; transform:translateY(0) scale(1); filter:brightness(1); }
++    }
++
++    @keyframes fadeOutAutoRoll {
++      0%   { opacity:1; transform:scale(1); filter:brightness(1); }
++      40%  { opacity:0.55; transform:scale(0.992); filter:brightness(1.1); }
++      100% { opacity:0; transform:scale(0.98); filter:brightness(0.85); }
++    }
++
++    @keyframes fadeInAutoCard {
++      0%   { opacity:0; transform:translateY(-6px) scale(0.985); filter:brightness(0.75); }
++      70%  { opacity:0.95; transform:translateY(-1px) scale(0.995); filter:brightness(1.15); }
++      100% { opacity:1; transform:translateY(0) scale(1); filter:brightness(1); }
++    }
++
++    @media (min-width: 769px) {
++      body.auto-running .fade-in-fast {
++        animation-name:fadeInAutoRoll;
++        animation-duration:0.6s;
++      }
++      body.auto-running .fade-out-card {
++        animation-name:fadeOutAutoRoll;
++        animation-duration:0.55s;
++      }
++      body.auto-running .fade-in-card {
++        animation-name:fadeInAutoCard;
++        animation-duration:0.6s;
++      }
++    }
  
+     .stats-row {
+       margin-top:6px;
+       font-size:0.9rem;
+       display:flex;
+       flex-direction:column;
+       gap:4px;
+     }
  
-     document.getElementById("rollBtn").addEventListener("click", () => {
-       doOneRollStep();
-     });
+     #log {
+       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New", monospace;
+       font-size:0.75rem;
+       max-height:260px;
+       overflow-y:auto;
+       padding:6px 8px;
+       background:#111111;
+       border-radius:8px;
+       border:1px solid #27272a;
+       white-space:pre-wrap;
+     }
  
-     document.querySelectorAll(".option-box.candidate").forEach(box => {
-       box.addEventListener("click", (e) => {
-         const idx = Number(e.currentTarget.getAttribute("data-choice")) - 1;
-         chooseCandidate(idx);
-       });
-     });
- 
-     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
-       r.addEventListener("change", () => {
-         // 큐브 타입 변경 시 통계 초기화
-         meisterUsed = 0;
-         mesoUsed = 0;
-         rollCount = 0;
- 
-         updateCubeTag();
-         initCurrentOption();
-       });
-     });
- 
+     .tag {
+       display:inline-flex;
+       align-items:center;
+       gap:4px;

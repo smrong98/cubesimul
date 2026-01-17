@@ -1,20 +1,284 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index 783315baca7f7014f7d31e445988399054a3b28d..0f42d2dd4f5e819adb4acdc38564840b5c287070 100644
+index c2a840278e46a10c0c5bc2433d76cd951bb4a634..2f286f02004c5a1ec79eea820eb6a19ca32c0080 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -781,56 +781,63 @@
-     autoStep({ mode: "main", criteria: { iedMaxN, bossMinM } });
+@@ -457,65 +457,70 @@
+     // predicate(candLines) => boolean
+     const ids = ["box-roll1", "box-roll2", "box-roll3"];
+   
+     for (let i = 0; i < 3; i++) {
+       const cand = Array.isArray(rollCandidates) ? rollCandidates[i] : null;
+       if (!cand) continue;
+   
+       if (predicate(cand)) {
+         const el = document.getElementById(ids[i]);
+         if (!el) continue;
+   
+         el.classList.add("auto-hit");
+         el.classList.add("auto-hit-flash");
+   
+         // flash는 끝나면 제거, hit는 유지
+         el.addEventListener("animationend", () => {
+           el.classList.remove("auto-hit-flash");
+         }, { once: true });
+       }
+     }
+   }
+ 
+   
+   
+ 
+-  function updateAutoButton(running) {
+-    const btn = document.getElementById("autoRollBtn");
+-    if (!btn) return;
+-    btn.textContent = running ? "자동 돌리기 정지" : "자동 돌리기 시작";
++  function updateAutoButton(running) {
++    const btn = document.getElementById("autoRollBtn");
++    if (!btn) return;
++    btn.textContent = running ? "자동 돌리기 정지" : "자동 돌리기 시작";
+ 
+     // 지원 부위가 아니면 시작 불가 (진행 중일 때는 정지 가능)
+     const supported = isSupportedParts();
+-    btn.disabled = !supported && !running;
+-    btn.style.opacity = (!supported && !running) ? 0.5 : 1;
+-  }
+-
+-  function updateBossMinOptions() {
+-    const bossMinSelect = document.getElementById("autoMainBossMin");
+-    const iedSelect = document.getElementById("autoMainIED");
+-    if (!bossMinSelect || !iedSelect) return;
++    btn.disabled = !supported && !running;
++    btn.style.opacity = (!supported && !running) ? 0.5 : 1;
++  }
++
++  function setAutoRunningClass(running) {
++    if (!document || !document.body) return;
++    document.body.classList.toggle("auto-running", running);
++  }
++
++  function updateBossMinOptions() {
++    const bossMinSelect = document.getElementById("autoMainBossMin");
++    const iedSelect = document.getElementById("autoMainIED");
++    if (!bossMinSelect || !iedSelect) return;
+ 
+     const iedN = Number(iedSelect.value);
+     const maxBoss = Math.max(0, 3 - iedN);
+ 
+     // 옵션 재구성 (기존 선택 값 유지 시도)
+     const prev = Number(bossMinSelect.value);
+     bossMinSelect.innerHTML = "";
+     for (let i = 0; i <= maxBoss; i++) {
+       const opt = document.createElement("option");
+       opt.value = String(i);
+       opt.textContent = String(i);
+       bossMinSelect.appendChild(opt);
+     }
+     bossMinSelect.value = String(Math.min(prev || 0, maxBoss));
+   }
+ 
+   function setAutoKindVisibility() {
+     const container = document.getElementById("weaponAutoContainer");
+     if (!container) return;
+     const addi = isAdditionalCubeSelected();
+     const partsType = getSelectedPartsTypeSafe();
+     const isWeapon = isWeaponPartsType(partsType);
+     const isAccessory = isAccessoryPartsType(partsType);
+     const isArmor = isArmorPartsType(partsType);
+ 
+@@ -637,181 +642,186 @@
+   }
+ 
+   function startAuto() {
+     if (autoRunning) return;
+ 
+     if (!isSupportedParts()) {
+       alert("선택한 부위/큐브 종류에서는 자동 돌리기를 사용할 수 없습니다.");
+       return;
+     }
+ 
+     if (isAdditionalCubeSelected()) {
+       // ====== additional(에디) ======
+       const partsType = getSelectedPartsTypeSafe();
+       if (isWeaponPartsType(partsType)) {
+         const targetInput = document.getElementById("weaponAutoTarget");
+         if (!targetInput) {
+           alert("자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
+           return;
+         }
+         const targetPercent = Number(targetInput.value);
+         if (!targetPercent || targetPercent <= 0) {
+           alert("올바른 목표 %를 입력해주세요.");
+           return;
+         }
+ 
+-        autoRunning = true;
+-        updateAutoButton(true);
+-        autoStep({ mode: "addi-weapon", targetPercent });
+-        return;
+-      }
++        autoRunning = true;
++        updateAutoButton(true);
++        setAutoRunningClass(true);
++        autoStep({ mode: "addi-weapon", targetPercent });
++        return;
++      }
+ 
+       if (!(isAccessoryPartsType(partsType) || isArmorPartsType(partsType))) {
+         alert("아랫잠재 자동 돌리기는 장신구/방어구에서만 사용할 수 있습니다.");
+         return;
+       }
+ 
+       const requiredLinesSelect = document.getElementById("additionalAutoLines");
+       if (!requiredLinesSelect) {
+         alert("아랫잠재 자동 돌리기 유효 옵션 줄 수 입력칸을 찾을 수 없습니다.");
+         return;
+       }
+       const requiredLines = Number(requiredLinesSelect.value);
+       if (requiredLines !== 2 && requiredLines !== 3) {
+         alert("올바른 유효 옵션 줄 수를 선택해주세요.");
+         return;
+       }
+ 
+       const statType = getMainStat();
+ 
+-      autoRunning = true;
+-      updateAutoButton(true);
+-      autoStep({
+-        mode: "addi-stat",
+-        criteria: {
+-          requiredLines,
+-          statType
+-        }
++      autoRunning = true;
++      updateAutoButton(true);
++      setAutoRunningClass(true);
++      autoStep({
++        mode: "addi-stat",
++        criteria: {
++          requiredLines,
++          statType
++        }
+       });
+       return;
+     }
+ 
+     const partsType = getSelectedPartsTypeSafe();
+     if (!isWeaponPartsType(partsType)) {
+       // ====== stat(장신구/방어구) ======
+       const targetInput = document.getElementById("armorAutoTarget");
+       if (!targetInput) {
+         alert("장신구/방어구 자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
+         return;
+       }
+       const targetPercent = Number(targetInput.value);
+       if (isNaN(targetPercent) || targetPercent < 0) {
+         alert("올바른 목표 %를 입력해주세요.");
+         return;
+       }
+ 
+       const statType = getMainStat();
+ 
+       let minCooldown = 0;
+       const cooldownSelect = document.getElementById("armorCooldownMin");
+       if (cooldownSelect && partsType === PARTS.HAT) {
+         minCooldown = Number(cooldownSelect.value);
+       }
+ 
+       let minCritLines = 0;
+       const critSelect = document.getElementById("armorCritMin");
+       if (critSelect && partsType === PARTS.GLOVE) {
+         minCritLines = Number(critSelect.value);
+       }
+ 
+       let minDropMesoLines = 0;
+       const dropSelect = document.getElementById("accessoryDropMin");
+       if (dropSelect && isAccessoryPartsType(partsType)) {
+         minDropMesoLines = Number(dropSelect.value);
+       }
+ 
+-      autoRunning = true;
+-      updateAutoButton(true);
+-      autoStep({
+-        mode: "stat",
+-        criteria: {
+-          targetPercent,
++      autoRunning = true;
++      updateAutoButton(true);
++      setAutoRunningClass(true);
++      autoStep({
++        mode: "stat",
++        criteria: {
++          targetPercent,
+           statType,
+           minCooldown,
+           minCritLines,
+           minDropMesoLines
+         }
+       });
+       return;
+     }
+ 
+     // ====== main(윗잠재) ======
+     const iedSelect = document.getElementById("autoMainIED");
+     if (!iedSelect) {
+       alert("윗잠재 자동돌리기 IED 설정 UI를 찾을 수 없습니다.");
+       return;
+     }
+ 
+     const iedMaxN = Number(iedSelect.value);
+     if (isNaN(iedMaxN) || iedMaxN < 0 || iedMaxN > 3) {
+       alert("IED 줄 수가 올바르지 않습니다.");
+       return;
+     }
+     
+     let bossMinM = 0;
+     if (isWeaponOrSecondarySelected()) {
+       const bossSelect = document.getElementById("autoMainBossMin");
+       if (!bossSelect) {
+         alert("윗잠재 자동돌리기 Boss 설정 UI를 찾을 수 없습니다.");
+         return;
+       }
+       bossMinM = Number(bossSelect.value);
+     
+       // ✅ Boss dropdown은 0 ~ (3 - iedMaxN) 로 제한(요구사항)
+       const maxBoss = 3 - iedMaxN;
+       if (isNaN(bossMinM) || bossMinM < 0 || bossMinM > maxBoss) {
+         alert("Boss 최소 줄 수가 올바르지 않습니다.");
+         return;
+       }
+     }
+     
+-    autoRunning = true;
+-    updateAutoButton(true);
+-    
+-    // ✅ criteria에 iedMaxN 전달
+-    autoStep({ mode: "main", criteria: { iedMaxN, bossMinM } });
++    autoRunning = true;
++    updateAutoButton(true);
++    setAutoRunningClass(true);
++    
++    // ✅ criteria에 iedMaxN 전달
++    autoStep({ mode: "main", criteria: { iedMaxN, bossMinM } });
      
    }
  
-   function stopAuto() {
-     autoRunning = false;
-     if (autoTimer) {
-       clearTimeout(autoTimer);
-       autoTimer = null;
-     }
-     updateAutoButton(false);
-   }
+-  function stopAuto() {
+-    autoRunning = false;
+-    if (autoTimer) {
+-      clearTimeout(autoTimer);
+-      autoTimer = null;
+-    }
+-    updateAutoButton(false);
+-  }
++  function stopAuto() {
++    autoRunning = false;
++    if (autoTimer) {
++      clearTimeout(autoTimer);
++      autoTimer = null;
++    }
++    setAutoRunningClass(false);
++    updateAutoButton(false);
++  }
  
    // DOM 준비 후 이벤트 연결
    window.addEventListener("DOMContentLoaded", () => {
@@ -28,47 +292,15 @@ index 783315baca7f7014f7d31e445988399054a3b28d..0f42d2dd4f5e819adb4acdc38564840b
          }
        });
        // 적용 및 리셋 클릭 시 하이라이트 제거
--      const applyResetBtn = document.getElementById("applyResetBtn");
--      if (applyResetBtn) {
--        applyResetBtn.addEventListener("click", () => {
--          clearAutoHitUI();
--        });
--      }
-+      const applyResetBtn = document.getElementById("applyResetBtn");
-+      if (applyResetBtn) {
-+        applyResetBtn.addEventListener("click", () => {
-+          clearAutoHitUI();
-+        });
-+      }
-+
-+      const autoResetBtn = document.getElementById("autoResetBtn");
-+      if (autoResetBtn) {
-+        autoResetBtn.addEventListener("click", () => {
-+          clearAutoHitUI();
-+        });
-+      }
- 
-       // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
-       document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
-         r.addEventListener("change", () => {
-           clearAutoHitUI();
-         });
-       });
- 
-       // 부위 변경 시에도 남아있으면 혼동되므로 제거(권장)
-       const partsSelect2 = document.getElementById("partsType");
-       if (partsSelect2) {
-         partsSelect2.addEventListener("change", () => {
+       const applyResetBtn = document.getElementById("applyResetBtn");
+       if (applyResetBtn) {
+         applyResetBtn.addEventListener("click", () => {
            clearAutoHitUI();
          });
        }
-     }
  
-     const partsSelect = document.getElementById("partsType");
-     if (partsSelect) {
-       partsSelect.addEventListener("change", refreshAutoPanelVisibility);
-     }
- 
-     // cubeKind 변경 시 (윗/에디) UI 토글
-     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
-       r.addEventListener("change", () => {
+       const autoResetBtn = document.getElementById("autoResetBtn");
+       if (autoResetBtn) {
+         autoResetBtn.addEventListener("click", () => {
+           clearAutoHitUI();
+         });
