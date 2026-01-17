@@ -1,64 +1,60 @@
 diff --git a/index.html b/index.html
-index 33d0245fdb54b34f3b3e9ce2aca1fe170af342f1..a96a3c00fdbf237ef82da103f945dc10eef95bc2 100644
+index 948dd93a7447bb3326e59c99ac94bc42b259e105..27c9e2c9345fc872e0af76a9c279622af49dc5f7 100644
 --- a/index.html
 +++ b/index.html
-@@ -459,50 +459,59 @@
-         <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
-         <div data-auto-kind="main" style="margin-top:10px;">
-           <label style="margin-bottom:4px;">무보엠류 자동 돌리기 (유효 옵션 조합)</label>
-           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-             최대 조건을 넘지 않는 후보가 나오면 자동으로 멈춤 <br>
-             예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
-             예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
-           </div>
+@@ -13,53 +13,55 @@
+       margin:0;
+       padding:16px;
+     }
+     h1 {
+       margin:0 0 12px;
+       font-size:1.4rem;
+       color:#8CAF0B;
+     }
  
-           <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
-             <div style="display:flex; align-items:center; gap:8px;">
-               <label for="autoMainIED" style="margin:0; font-size:0.85rem;">최대 방무 몇 줄</label>
-               <select id="autoMainIED" style="max-width:110px;">
-                 <option value="0">0</option>
-                 <option value="1">1</option>
-                 <option value="2">2</option>
-                 <option value="3">3</option>
-               </select>
-             </div>
+     .layout {
+       display:grid;
+       grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
+       gap:16px;
+       align-items:start;
+     }
+     .layout-column {
+       display:flex;
+       flex-direction:column;
+       gap:16px;
+       align-items:stretch;
+     }
+     @media (max-width: 768px) {
+       .layout {
+         display:flex;
+         flex-direction:column;
++        align-items:stretch;
+       }
+       .layout-column {
+         gap:16px;
++        width:100%;
+       }
+     }
  
-             <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
-               <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최대 보공 몇 줄</label>
-               <select id="autoMainBossMin" style="max-width:110px;"></select>
-             </div>
-           </div>
-+          <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-+            <label style="margin:0; font-size:0.85rem;">
-+              <input type="checkbox" id="autoMainSeekDeparture" />
-+              이탈 잠재 옵션 노리기
-+            </label>
-+            <span style="font-size:0.75rem; color:#a1a1aa;">
-+              2~3줄에 1줄 옵션(동일 수치) 등장 시만 유효
-+            </span>
-+          </div>
-         </div>
+     .card {
+       background:#1e1e1e;
+       border:1px solid #2d2d2d;
+       border-radius:12px;
+       padding:12px 14px;
+       box-shadow:0 10px 30px rgba(0,0,0,0.6);
+     }
+     .card h2 {
+       margin:0 0 8px;
+       font-size:1rem;
+       border-bottom:1px solid #2d2d2d;
+       padding-bottom:4px;
+       color:#ffffff;
+     }
+     @media (max-width: 768px) {
+       .card {
+         width:100%;
+       }
+     }
  
-         <!-- 장신구/방어구 자동 돌리기: 주스탯% 합계 -->
-         <div data-auto-kind="stat" style="margin-top:10px;">
-           <label style="margin-bottom:4px;">장신구/방어구 자동 돌리기 (주스탯 %)</label>
-           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-             주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
-             "올스탯(제논 용)"은 STR/DEX/LUK을 각각 1/3 합산하며 올스탯%도 포함<br>
-             쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
-           </div>
- 
-           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-             <label for="armorAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
-             <input type="number" id="armorAutoTarget" value="0" min="0" max="39" style="max-width:80px;" />
-           </div>
- 
-           <div id="armorCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-             <label for="armorCooldownMin" style="margin:0; font-size:0.85rem;">목표 최소 쿨감</label>
-             <select id="armorCooldownMin" style="max-width:110px;">
-               <option value="0">0초</option>
-               <option value="1">1초</option>
-               <option value="2">2초</option>
-               <option value="3">3초</option>
-               <option value="4">4초</option>
-               <option value="5">5초</option>
+     label {
+       font-size:0.85rem;
