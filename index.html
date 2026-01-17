@@ -460,7 +460,7 @@
         <div data-auto-kind="main" style="margin-top:10px;">
           <label style="margin-bottom:4px;">무보엠류 자동 돌리기 (유효 옵션 조합)</label>
           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-            최소 조건을 만족하는 후보가 나오면 자동으로 멈춤 <br>
+            최대 조건을 넘지 않는 후보가 나오면 자동으로 멈춤 <br>
             예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
             예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
           </div>
@@ -477,7 +477,7 @@
             </div>
 
             <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
-              <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최소 보공 몇 줄</label>
+              <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최대 보공 몇 줄</label>
               <select id="autoMainBossMin" style="max-width:110px;"></select>
             </div>
           </div>

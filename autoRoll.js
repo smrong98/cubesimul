@@ -331,7 +331,7 @@
     return firstIsMainPercent && secondIsMainPercent;
   }
 
-  function isMainValidSet(candLines, partsType, iedMaxN, bossMinM) {
+  function isMainValidSet(candLines, partsType, iedMaxN, bossMaxM) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
     const mainStat = getEffectiveMainStat();
   
@@ -355,7 +355,7 @@
   
     // 무기/보조무기
     const bossCount = countLines(candLines, isBossLine);
-    if (bossCount < bossMinM) return false;
+    if (bossCount > bossMaxM) return false;
   
     // IED/Boss 제외 나머지 줄은 ATK/MATK% 이어야 유효
     for (const l of candLines) {
@@ -424,7 +424,7 @@
     if (!Array.isArray(rollCandidates)) return false;
     const partsType = getSelectedPartsTypeSafe();
     for (const cand of rollCandidates) {
-      if (isMainValidSet(cand, partsType, criteria.iedMaxN, criteria.bossMinM)) {
+      if (isMainValidSet(cand, partsType, criteria.iedMaxN, criteria.bossMaxM)) {
         return true;
       }
     }
@@ -490,24 +490,24 @@
     btn.style.opacity = (!supported && !running) ? 0.5 : 1;
   }
 
-  function updateBossMinOptions() {
-    const bossMinSelect = document.getElementById("autoMainBossMin");
+  function updateBossMaxOptions() {
+    const bossMaxSelect = document.getElementById("autoMainBossMin");
     const iedSelect = document.getElementById("autoMainIED");
-    if (!bossMinSelect || !iedSelect) return;
+    if (!bossMaxSelect || !iedSelect) return;
 
     const iedN = Number(iedSelect.value);
     const maxBoss = Math.max(0, 3 - iedN);
 
     // 옵션 재구성 (기존 선택 값 유지 시도)
-    const prev = Number(bossMinSelect.value);
-    bossMinSelect.innerHTML = "";
+    const prev = Number(bossMaxSelect.value);
+    bossMaxSelect.innerHTML = "";
     for (let i = 0; i <= maxBoss; i++) {
       const opt = document.createElement("option");
       opt.value = String(i);
       opt.textContent = String(i);
-      bossMinSelect.appendChild(opt);
+      bossMaxSelect.appendChild(opt);
     }
-    bossMinSelect.value = String(Math.min(prev || 0, maxBoss));
+    bossMaxSelect.value = String(Math.min(prev || 0, maxBoss));
   }
 
   function setAutoKindVisibility() {
@@ -572,7 +572,7 @@
       bossRow.style.display = isWeaponOrSecondarySelected() ? "flex" : "none";
     }
 
-    updateBossMinOptions();
+    updateBossMaxOptions();
     setAutoKindVisibility();
     updateSpecialOptionVisibility();
     updateMainStatAvailability();
@@ -616,7 +616,7 @@
       if (hasSatisfiedCandidateMain(payload.criteria)) {
         const partsType = getSelectedPartsTypeSafe();
         applyAutoHitUIForCandidates(cand => {
-          return isMainValidSet(cand, partsType, payload.criteria.iedMaxN, payload.criteria.bossMinM);
+          return isMainValidSet(cand, partsType, payload.criteria.iedMaxN, payload.criteria.bossMaxM);
         });
         stopAuto();
         return;
@@ -757,19 +757,19 @@
       return;
     }
     
-    let bossMinM = 0;
+    let bossMaxM = 0;
     if (isWeaponOrSecondarySelected()) {
       const bossSelect = document.getElementById("autoMainBossMin");
       if (!bossSelect) {
         alert("윗잠재 자동돌리기 Boss 설정 UI를 찾을 수 없습니다.");
         return;
       }
-      bossMinM = Number(bossSelect.value);
+      bossMaxM = Number(bossSelect.value);
     
       // ✅ Boss dropdown은 0 ~ (3 - iedMaxN) 로 제한(요구사항)
       const maxBoss = 3 - iedMaxN;
-      if (isNaN(bossMinM) || bossMinM < 0 || bossMinM > maxBoss) {
-        alert("Boss 최소 줄 수가 올바르지 않습니다.");
+      if (isNaN(bossMaxM) || bossMaxM < 0 || bossMaxM > maxBoss) {
+        alert("Boss 최대 줄 수가 올바르지 않습니다.");
         return;
       }
     }
@@ -778,7 +778,7 @@
     updateAutoButton(true);
     
     // ✅ criteria에 iedMaxN 전달
-    autoStep({ mode: "main", criteria: { iedMaxN, bossMinM } });
+    autoStep({ mode: "main", criteria: { iedMaxN, bossMaxM } });
     
   }
 
@@ -849,14 +849,14 @@
     const iedSelect = document.getElementById("autoMainIED");
     if (iedSelect) {
       iedSelect.addEventListener("change", () => {
-        updateBossMinOptions();
+        updateBossMaxOptions();
         refreshAutoPanelVisibility();
       });
     }
     
 
     // 초기 boss dropdown 구성
-    updateBossMinOptions();
+    updateBossMaxOptions();
 
     // 초기 상태 세팅
     refreshAutoPanelVisibility();
