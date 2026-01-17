@@ -63,6 +63,10 @@
     return typeof getSelectedPartsType === "function" ? getSelectedPartsType() : 0;
   }
 
+  function getSelectedLevelSafe() {
+    return typeof getSelectedLevel === "function" ? getSelectedLevel() : 0;
+  }
+
   function isWeaponPartsType(p) {
     return WEAPON_PARTS.has(p);
   }
@@ -114,6 +118,34 @@
   function getMainKeyword(mainStat) {
     // 기존 mainStat INT이면 "마력" 기준을 유지
     return mainStat === "INT" ? "마력" : "공격력";
+  }
+
+  const line1OptionCache = new Map();
+
+  function getLine1OptionSet(context) {
+    if (!context || typeof getBasePool !== "function") return null;
+    const key = `${context.cubeItemID}-${context.partsType}-${context.level}`;
+    if (line1OptionCache.has(key)) return line1OptionCache.get(key);
+
+    const pool = getBasePool(context.cubeItemID, context.partsType, context.level, 1);
+    if (!Array.isArray(pool) || pool.length === 0) {
+      line1OptionCache.set(key, null);
+      return null;
+    }
+    const set = new Set(pool.map(row => row.optionText));
+    line1OptionCache.set(key, set);
+    return set;
+  }
+
+  function hasDepartureLine(candLines, context) {
+    if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+    const line1Set = getLine1OptionSet(context);
+    if (!line1Set) return false;
+    for (let i = 1; i < candLines.length; i++) {
+      const text = candLines[i] && candLines[i].optionText ? candLines[i].optionText : "";
+      if (text && line1Set.has(text)) return true;
+    }
+    return false;
   }
 
   function getAdditionalMainStatTypes(statType) {
@@ -331,8 +363,11 @@
     return firstIsMainPercent && secondIsMainPercent;
   }
 
-  function isMainValidSet(candLines, partsType, iedMaxN, bossMaxM) {
+  function isMainValidSet(candLines, context, criteria) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+    const partsType = context.partsType;
+    const iedMaxN = criteria.iedMaxN;
+    const bossMaxM = criteria.bossMaxM;
     const mainStat = getEffectiveMainStat();
   
     const iedCount = countLines(candLines, isIEDLine);
@@ -350,7 +385,7 @@
         if (isIEDLine(l)) continue;
         if (!isAtkLine(l, mainStat)) return false;
       }
-      return true;
+      return !criteria.seekDeparture || hasDepartureLine(candLines, context);
     }
   
     // 무기/보조무기
@@ -363,6 +398,7 @@
       if (isBossLine(l)) continue;
       if (!isAtkLine(l, mainStat)) return false;
     }
+    if (criteria.seekDeparture && !hasDepartureLine(candLines, context)) return false;
     return true;
   }
 
@@ -422,9 +458,13 @@
   // ====== main(윗잠재) stop condition ======
   function hasSatisfiedCandidateMain(criteria) {
     if (!Array.isArray(rollCandidates)) return false;
-    const partsType = getSelectedPartsTypeSafe();
+    const context = {
+      cubeItemID: getSelectedCubeIdSafe(),
+      partsType: getSelectedPartsTypeSafe(),
+      level: getSelectedLevelSafe()
+    };
     for (const cand of rollCandidates) {
-      if (isMainValidSet(cand, partsType, criteria.iedMaxN, criteria.bossMaxM)) {
+      if (isMainValidSet(cand, context, criteria)) {
         return true;
       }
     }
@@ -614,9 +654,13 @@
     } else if (payload && payload.mode === "main") {
       // 3줄 전체 기준 유효옵션 충족 시 종료
       if (hasSatisfiedCandidateMain(payload.criteria)) {
-        const partsType = getSelectedPartsTypeSafe();
+        const context = {
+          cubeItemID: getSelectedCubeIdSafe(),
+          partsType: getSelectedPartsTypeSafe(),
+          level: getSelectedLevelSafe()
+        };
         applyAutoHitUIForCandidates(cand => {
-          return isMainValidSet(cand, partsType, payload.criteria.iedMaxN, payload.criteria.bossMaxM);
+          return isMainValidSet(cand, context, payload.criteria);
         });
         stopAuto();
         return;
@@ -776,9 +820,12 @@
     
     autoRunning = true;
     updateAutoButton(true);
+
+    const seekDepartureInput = document.getElementById("autoMainSeekDeparture");
+    const seekDeparture = seekDepartureInput ? seekDepartureInput.checked : false;
     
     // ✅ criteria에 iedMaxN 전달
-    autoStep({ mode: "main", criteria: { iedMaxN, bossMaxM } });
+    autoStep({ mode: "main", criteria: { iedMaxN, bossMaxM, seekDeparture } });
     
   }
 
