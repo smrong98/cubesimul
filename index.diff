@@ -1,127 +1,327 @@
 diff --git a/index.html b/index.html
-index cf123d424d9e2da4c4228d6db480d6e6ea8178a5..1c4557556a1e960e6f5808f7f205d41f710b691c 100644
+index cf123d424d9e2da4c4228d6db480d6e6ea8178a5..4b2c2ddcc0b3e97f5f4a28e0ce4de80fcc93ac9a 100644
 --- a/index.html
 +++ b/index.html
-@@ -225,72 +225,105 @@
-       }
-       45% {
-         box-shadow:
-           0 0 22px rgba(255,235,150,0.85),  /* 핵심 */
-           0 0 44px rgba(255,220,130,0.55),
-           0 0 80px rgba(255,220,130,0.35),
-           0 0 120px rgba(255,220,130,0.20),
-           0 10px 24px rgba(0,0,0,0.75);
-       }
-       100% {
-         box-shadow:
-           0 0 14px rgba(255,215,120,0.45),
-           0 0 30px rgba(255,215,120,0.32),
-           0 0 60px rgba(255,215,120,0.22),
-           0 10px 24px rgba(0,0,0,0.75);
-       }
+@@ -1,58 +1,67 @@
+ <!DOCTYPE html>
+ <html lang="ko">
+ <head>
+   <meta charset="UTF-8" />
+   <title>잠재능력 재설정 시뮬레이터</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <style>
+     * { box-sizing: border-box; }
+     body {
+       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+       background:#121212;
+       color:#e5e7eb;
+       margin:0;
+       padding:16px;
+     }
+     h1 {
+       margin:0 0 12px;
+       font-size:1.4rem;
+       color:#8CAF0B;
      }
  
- 
-     .option-box.auto-hit-flash {
-       animation: autoHitFlash 0.9s ease-out;
-     }
- 
- 
- 
--    @keyframes fadeInFast {
--      from { opacity:0; transform:translateY(4px); }
--      to   { opacity:1; transform:translateY(0); }
+-    .layout {
+-      display:grid;
+-      grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
+-      gap:16px;
+-      align-items:start;
 -    }
--    .fade-in-fast {
--      animation:fadeInFast 0.18s ease-out;
+-    @media (max-width: 768px) {
+-      .layout {
+-        display:flex;
+-        flex-direction:column;
+-      }
 -    }
-+    @keyframes fadeInFast {
-+      from { opacity:0; transform:translateY(4px); }
-+      to   { opacity:1; transform:translateY(0); }
++    .layout {
++      display:grid;
++      grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
++      gap:16px;
++      align-items:start;
 +    }
-+    .fade-in-fast {
-+      animation:fadeInFast 0.18s ease-out;
++    .layout-column {
++      display:flex;
++      flex-direction:column;
++      gap:16px;
++      align-items:stretch;
 +    }
- 
-     @keyframes fadeOutCard {
-       from { opacity:1; transform:scale(1); }
-       to   { opacity:0; transform:scale(0.98); }
-     }
--    .fade-out-card {
--      animation:fadeOutCard 0.15s ease-out;
--    }
--    @keyframes fadeInCard {
--      from { opacity:0; transform:translateY(-2px); }
--      to   { opacity:1; transform:translateY(0); }
--    }
--    .fade-in-card {
--      animation:fadeInCard 0.2s ease-out;
--    }
-+    .fade-out-card {
-+      animation:fadeOutCard 0.15s ease-out;
-+    }
-+    @keyframes fadeInCard {
-+      from { opacity:0; transform:translateY(-2px); }
-+      to   { opacity:1; transform:translateY(0); }
-+    }
-+    .fade-in-card {
-+      animation:fadeInCard 0.2s ease-out;
-+    }
-+
-+    @keyframes fadeInAutoRoll {
-+      0%   { opacity:0; transform:translateY(10px) scale(0.985); filter:brightness(0.7); }
-+      60%  { opacity:0.9; transform:translateY(2px) scale(0.995); filter:brightness(1.15); }
-+      100% { opacity:1; transform:translateY(0) scale(1); filter:brightness(1); }
-+    }
-+
-+    @keyframes fadeOutAutoRoll {
-+      0%   { opacity:1; transform:scale(1); filter:brightness(1); }
-+      40%  { opacity:0.55; transform:scale(0.992); filter:brightness(1.1); }
-+      100% { opacity:0; transform:scale(0.98); filter:brightness(0.85); }
-+    }
-+
-+    @keyframes fadeInAutoCard {
-+      0%   { opacity:0; transform:translateY(-6px) scale(0.985); filter:brightness(0.75); }
-+      70%  { opacity:0.95; transform:translateY(-1px) scale(0.995); filter:brightness(1.15); }
-+      100% { opacity:1; transform:translateY(0) scale(1); filter:brightness(1); }
-+    }
-+
-+    @media (min-width: 769px) {
-+      body.auto-running .fade-in-fast {
-+        animation-name:fadeInAutoRoll;
-+        animation-duration:0.6s;
++    @media (max-width: 768px) {
++      .layout {
++        display:flex;
++        flex-direction:column;
 +      }
-+      body.auto-running .fade-out-card {
-+        animation-name:fadeOutAutoRoll;
-+        animation-duration:0.55s;
-+      }
-+      body.auto-running .fade-in-card {
-+        animation-name:fadeInAutoCard;
-+        animation-duration:0.6s;
++      .layout-column {
++        gap:16px;
 +      }
 +    }
  
-     .stats-row {
-       margin-top:6px;
-       font-size:0.9rem;
+     .card {
+       background:#1e1e1e;
+       border:1px solid #2d2d2d;
+       border-radius:12px;
+       padding:12px 14px;
+       box-shadow:0 10px 30px rgba(0,0,0,0.6);
+     }
+     .card h2 {
+       margin:0 0 8px;
+       font-size:1rem;
+       border-bottom:1px solid #2d2d2d;
+       padding-bottom:4px;
+       color:#ffffff;
+     }
+     @media (max-width: 768px) {
+       .card {
+         width:100%;
+       }
+     }
+ 
+     label {
+       font-size:0.85rem;
+       display:block;
+       margin-bottom:4px;
+@@ -309,75 +318,69 @@
+       background:#8CAF0B;
+     }
+ 
+     .log-header-row {
        display:flex;
-       flex-direction:column;
-       gap:4px;
-     }
- 
-     #log {
-       font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,"Liberation Mono","Courier New", monospace;
-       font-size:0.75rem;
-       max-height:260px;
-       overflow-y:auto;
-       padding:6px 8px;
-       background:#111111;
-       border-radius:8px;
-       border:1px solid #27272a;
-       white-space:pre-wrap;
-     }
- 
-     .tag {
-       display:inline-flex;
        align-items:center;
-       gap:4px;
+       justify-content:space-between;
+       gap:8px;
+     }
+     .log-header-row span {
+       font-size:1rem;
+     }
+     .log-toggle-btn {
+       border-radius:999px;
+       border:1px solid #3f3f46;
+       background:#111111;
+       color:#e5e7eb;
+       font-size:0.75rem;
+       padding:2px 8px;
+       cursor:pointer;
+     }
+     .log-toggle-btn:hover {
+       background:#1f1f1f;
+     }
+ 
+-    #card-settings   { grid-column:1; grid-row:1; }
+-    #card-options    { grid-column:2; grid-row:1; }
+-    #card-stats      { grid-column:1; grid-row:2; }
+-    #card-log        { grid-column:2; grid-row:2; }
+-    @media (max-width: 768px) {
+-      #card-settings,
+-      #card-options,
+-      #card-stats,
+-      #card-log {
+-        grid-column:auto;
+-        grid-row:auto;
+-      }
+-    }
++    #card-settings,
++    #card-options,
++    #card-stats,
++    #card-log {
++      width:100%;
++    }
+   </style>
+ </head>
+ <body>
+   <h1>잠재능력 재설정 시뮬레이터</h1>
+   <div id="updateDate"
+   style="margin-top:2px; margin-bottom:14px; font-size:0.85rem; color:#a1a1aa; line-height:1.2;">
+   </div>
+ 
+-  <div class="layout">
+-    <!-- 1. 설정 카드 -->
+-    <section class="card" id="card-settings">
+-      <h2>설정</h2>
++  <div class="layout">
++    <div class="layout-column">
++      <!-- 1. 설정 카드 -->
++      <section class="card" id="card-settings">
++        <h2>설정</h2>
+ 
+       <div class="row">
+         <div>
+           <label for="itemLevel">아이템 레벨</label>
+           <select id="itemLevel">
+             <option value="100">100</option>
+             <option value="120">120</option>
+             <option value="130">130</option>
+             <option value="140">140</option>
+             <option value="150">150</option>
+             <option value="160">160</option>
+             <option value="200" selected>200</option>
+             <option value="250">250</option>
+           </select>
+         </div>
+         <div>
+           <label for="partsType">장비 부위</label>
+           <select id="partsType">
+             <option value="1">무기</option>
+             <option value="2">엠블렘</option>
+             <option value="3">보조무기(포스실드 제외)</option>
+             <option value="4">포스실드/소울링</option>
+             <option value="5">방패</option>
+             <option value="6">모자</option>
+             <option value="7">상의</option>
+@@ -508,118 +511,121 @@
+           </div>
+ 
+           <div id="armorCritRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+             <label for="armorCritMin" style="margin:0; font-size:0.85rem;">목표 최소 크뎀 줄 수</label>
+             <select id="armorCritMin" style="max-width:110px;">
+               <option value="0">없음</option>
+               <option value="1">크</option>
+               <option value="2">크크</option>
+               <option value="3">크크크</option>
+             </select>
+           </div>
+ 
+           <div id="accessoryDropRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+             <label for="accessoryDropMin" style="margin:0; font-size:0.85rem;">목표 드메 줄 수</label>
+             <select id="accessoryDropMin" style="max-width:110px;">
+               <option value="0">0줄</option>
+               <option value="1">1줄</option>
+               <option value="2">2줄</option>
+             </select>
+           </div>
+         </div>
+       </div>
+ 
+       <div style="margin-top:10px; display:flex; gap:8px;">
+         <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">적용 및 리셋</button>
+-      </div>
+-    </section>
+-
+-    <!-- 2. 옵션 카드 + 재설정 버튼 -->
+-    <section class="card" id="card-options">
+-      <h2>잠재 옵션</h2>
++      </div>
++      </section>
++
++      <!-- 4. 로그 (토글 가능) -->
++      <section class="card" id="card-log">
++        <h2>
++          <div class="log-header-row">
++            <span>로그 (최근 100회)</span>
++            <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
++          </div>
++        </h2>
++        <div id="log" style="display:none;"></div>
++      </section>
++    </div>
++
++    <div class="layout-column">
++      <!-- 2. 옵션 카드 + 재설정 버튼 -->
++      <section class="card" id="card-options">
++        <h2>잠재 옵션</h2>
+ 
+       <div class="options-layout">
+         <div class="option-box current" id="box-current">
+           <div class="option-title">현재 옵션</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-current"></div>
+           </div>
+         </div>
+ 
+         <div class="option-box candidate" id="box-roll1" data-choice="1">
+           <div class="option-title">재설정 1</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll1"></div>
+           </div>
+         </div>
+         <div class="option-box candidate" id="box-roll2" data-choice="2">
+           <div class="option-title">재설정 2</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll2"></div>
+           </div>
+         </div>
+         <div class="option-box candidate" id="box-roll3" data-choice="3">
+           <div class="option-title">재설정 3</div>
+           <div class="option-inner">
+             <div class="option-lines" id="lines-roll3"></div>
+           </div>
+         </div>
+       </div>
+ 
+       <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
+         <!-- 자동 돌리기 시작/정지 버튼 -->
+         <button class="btn btn-secondary" id="autoResetBtn">리셋</button>
+         <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
+         <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
+-      </div>
+-    </section>
+-
+-    <!-- 3. 재설정 현황 -->
+-    <section class="card" id="card-stats">
+-      <h2>재설정 현황</h2>
+-      <div class="stats-row">
+-        <div id="rollCountTag">재설정 횟수: 0</div>
+-        <div id="mesoTag">소모 메소: 0 메소</div>
+-        <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
+-        <div id="cubeTypeTag" class="tag">
+-          <span class="tag-dot"></span>
+-          <span>윗잠재</span>
+-        </div>
+-      </div>
+-    </section>
+-
+-    <!-- 4. 로그 (토글 가능) -->
+-    <section class="card" id="card-log">
+-      <h2>
+-        <div class="log-header-row">
+-          <span>로그 (최근 100회)</span>
+-          <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
+-        </div>
+-      </h2>
+-      <div id="log" style="display:none;"></div>
+-    </section>
+-  </div>
++      </div>
++      </section>
++
++      <!-- 3. 재설정 현황 -->
++      <section class="card" id="card-stats">
++        <h2>재설정 현황</h2>
++        <div class="stats-row">
++          <div id="rollCountTag">재설정 횟수: 0</div>
++          <div id="mesoTag">소모 메소: 0 메소</div>
++          <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
++          <div id="cubeTypeTag" class="tag">
++            <span class="tag-dot"></span>
++            <span>윗잠재</span>
++          </div>
++        </div>
++      </section>
++    </div>
++  </div>
+ 
+   <!-- 메인 로직 스크립트 -->
+   <script>
+     const LAST_UPDATE_DATE = "2026-01-02";
+ 
+     let bcProbs = [];
+     let wcProbs = [];
+     let acProbs = []; // 명장의 큐브(윗잠재)
+     let allProbs = [];
+ 
+     const CUBE_ID_BLACK = "5062010";   // 기존 윗잠재(블랙)
+     const CUBE_ID_ADDI  = "5062500";   // 기존 에디
+     const CUBE_ID_MEISTER = "2711004"; // acprobs.json 확인값
+ 
+     let currentLines = [];
+     let rollCandidates = [[], [], []];
+ 
+     let meisterUsed = 0; // 명장의 큐브 소모량(개)
+     let rollCount = 0;
+     let mesoUsed = 0;
+     let logEntries = [];
+ 
+     let logVisible = false;
+ 
+     const poolCache = new Map();

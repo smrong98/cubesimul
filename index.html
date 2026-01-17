@@ -25,10 +25,19 @@
       gap:16px;
       align-items:start;
     }
+    .layout-column {
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:stretch;
+    }
     @media (max-width: 768px) {
       .layout {
         display:flex;
         flex-direction:column;
+      }
+      .layout-column {
+        gap:16px;
       }
     }
 
@@ -331,18 +340,11 @@
       background:#1f1f1f;
     }
 
-    #card-settings   { grid-column:1; grid-row:1; }
-    #card-options    { grid-column:2; grid-row:1; }
-    #card-stats      { grid-column:1; grid-row:2; }
-    #card-log        { grid-column:2; grid-row:2; }
-    @media (max-width: 768px) {
-      #card-settings,
-      #card-options,
-      #card-stats,
-      #card-log {
-        grid-column:auto;
-        grid-row:auto;
-      }
+    #card-settings,
+    #card-options,
+    #card-stats,
+    #card-log {
+      width:100%;
     }
   </style>
 </head>
@@ -353,9 +355,10 @@
   </div>
 
   <div class="layout">
-    <!-- 1. 설정 카드 -->
-    <section class="card" id="card-settings">
-      <h2>설정</h2>
+    <div class="layout-column">
+      <!-- 1. 설정 카드 -->
+      <section class="card" id="card-settings">
+        <h2>설정</h2>
 
       <div class="row">
         <div>
@@ -531,11 +534,24 @@
       <div style="margin-top:10px; display:flex; gap:8px;">
         <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">적용 및 리셋</button>
       </div>
-    </section>
+      </section>
 
-    <!-- 2. 옵션 카드 + 재설정 버튼 -->
-    <section class="card" id="card-options">
-      <h2>잠재 옵션</h2>
+      <!-- 4. 로그 (토글 가능) -->
+      <section class="card" id="card-log">
+        <h2>
+          <div class="log-header-row">
+            <span>로그 (최근 100회)</span>
+            <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
+          </div>
+        </h2>
+        <div id="log" style="display:none;"></div>
+      </section>
+    </div>
+
+    <div class="layout-column">
+      <!-- 2. 옵션 카드 + 재설정 버튼 -->
+      <section class="card" id="card-options">
+        <h2>잠재 옵션</h2>
 
       <div class="options-layout">
         <div class="option-box current" id="box-current">
@@ -571,37 +587,27 @@
         <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
         <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
       </div>
-    </section>
+      </section>
 
-    <!-- 3. 재설정 현황 -->
-    <section class="card" id="card-stats">
-      <h2>재설정 현황</h2>
-      <div class="stats-row">
-        <div id="rollCountTag">재설정 횟수: 0</div>
-        <div id="mesoTag">소모 메소: 0 메소</div>
-        <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
-        <div id="cubeTypeTag" class="tag">
-          <span class="tag-dot"></span>
-          <span>윗잠재</span>
+      <!-- 3. 재설정 현황 -->
+      <section class="card" id="card-stats">
+        <h2>재설정 현황</h2>
+        <div class="stats-row">
+          <div id="rollCountTag">재설정 횟수: 0</div>
+          <div id="mesoTag">소모 메소: 0 메소</div>
+          <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
+          <div id="cubeTypeTag" class="tag">
+            <span class="tag-dot"></span>
+            <span>윗잠재</span>
+          </div>
         </div>
-      </div>
-    </section>
-
-    <!-- 4. 로그 (토글 가능) -->
-    <section class="card" id="card-log">
-      <h2>
-        <div class="log-header-row">
-          <span>로그 (최근 100회)</span>
-          <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
-        </div>
-      </h2>
-      <div id="log" style="display:none;"></div>
-    </section>
+      </section>
+    </div>
   </div>
 
   <!-- 메인 로직 스크립트 -->
   <script>
-    const LAST_UPDATE_DATE = "2026-01-02";
+    const LAST_UPDATE_DATE = "2026-01-17";
 
     let bcProbs = [];
     let wcProbs = [];
@@ -1137,6 +1143,10 @@
 
       <!-- 아래에 업데이트 내역을 계속 쌓아가면 됩니다 -->
       <div style="margin-bottom:10px;">
+        <div style="color:#e5e7eb; font-weight:600;">2026-01-17</div>
+        <div>- 자동돌리기 옆 리셋 버튼 추가</div>
+        <div>- PC버전 ui 배치 수정</div>
+        <div>- 무보엠 이탈옵션 저격 옵션 추가 및 조건 설정 옵션 변경</div>
         <div style="color:#e5e7eb; font-weight:600;">2026-01-02</div>
         <div>- 방어구/장신구 윗잠재 자동 돌리기 기능 추가</div>
         <div>- 방어구/장신구 아랫랫잠재 자동 돌리기 기능 추가</div>
