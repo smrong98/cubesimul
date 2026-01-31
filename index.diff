@@ -1,60 +1,72 @@
 diff --git a/index.html b/index.html
-index 948dd93a7447bb3326e59c99ac94bc42b259e105..27c9e2c9345fc872e0af76a9c279622af49dc5f7 100644
+index c3146d2d7c7f4e6b8a25ad75629025757dab4702..db7eb8132bdd0e53e27bdb3a1f3074b5fcfe3271 100644
 --- a/index.html
 +++ b/index.html
-@@ -13,53 +13,55 @@
-       margin:0;
-       padding:16px;
-     }
-     h1 {
-       margin:0 0 12px;
-       font-size:1.4rem;
-       color:#8CAF0B;
-     }
+@@ -434,59 +434,66 @@
  
-     .layout {
-       display:grid;
-       grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
-       gap:16px;
-       align-items:start;
-     }
-     .layout-column {
-       display:flex;
-       flex-direction:column;
-       gap:16px;
-       align-items:stretch;
-     }
-     @media (max-width: 768px) {
-       .layout {
-         display:flex;
-         flex-direction:column;
-+        align-items:stretch;
-       }
-       .layout-column {
-         gap:16px;
-+        width:100%;
-       }
-     }
+       <!-- 무기 전용 자동 돌리기 설정 UI -->
+       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
+         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
+         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+           무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
+         </div>
  
-     .card {
-       background:#1e1e1e;
-       border:1px solid #2d2d2d;
-       border-radius:12px;
-       padding:12px 14px;
-       box-shadow:0 10px 30px rgba(0,0,0,0.6);
-     }
-     .card h2 {
-       margin:0 0 8px;
-       font-size:1rem;
-       border-bottom:1px solid #2d2d2d;
-       padding-bottom:4px;
-       color:#ffffff;
-     }
-     @media (max-width: 768px) {
-       .card {
-         width:100%;
-       }
-     }
+         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
+         <div data-auto-kind="addi-weapon">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
+           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
+             공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
+           </div>
+           <div style="display:flex; align-items:center; gap:8px;">
+             <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
+             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
+           </div>
+         </div>
  
-     label {
-       font-size:0.85rem;
+         <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
+         <div data-auto-kind="addi-stat" style="margin-top:10px;">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
+           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+             유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
+-            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)
++            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)<br>
++            쿨감 -1초 옵션이 2줄 이상이면 줄 수 설정과 상관없이 즉시 멈춤
+           </div>
+           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
+             <select id="additionalAutoLines" style="max-width:110px;">
+               <option value="2">2줄</option>
+               <option value="3">3줄</option>
+             </select>
+           </div>
++          <div id="additionalCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
++            <label style="margin:0; font-size:0.85rem;">
++              <input type="checkbox" id="additionalCooldownRequired" />
++              무조건 쿨타임 감소 옵션 포함
++            </label>
++          </div>
+         </div>
+ 
+         <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
+         <div data-auto-kind="main" style="margin-top:10px;">
+           <label style="margin-bottom:4px;">무보엠류 자동 돌리기 (유효 옵션 조합)</label>
+           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+             최대 조건을 넘지 않는 후보가 나오면 자동으로 멈춤 <br>
+             예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
+             예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
+           </div>
+ 
+           <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
+             <div style="display:flex; align-items:center; gap:8px;">
+               <label for="autoMainIED" style="margin:0; font-size:0.85rem;">최대 방무 몇 줄</label>
+               <select id="autoMainIED" style="max-width:110px;">
+                 <option value="0">0</option>
+                 <option value="1">1</option>
+                 <option value="2">2</option>
+                 <option value="3">3</option>
+               </select>
+             </div>
+ 
+             <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
+               <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최대 보공 몇 줄</label>
+               <select id="autoMainBossMin" style="max-width:110px;"></select>

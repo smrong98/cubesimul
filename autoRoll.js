@@ -340,6 +340,9 @@
 
   function isAdditionalStatValidSet(candLines, criteria) {
     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+    const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
+    if (cooldownLines >= 2) return true;
+    if (criteria.requireCooldown && cooldownLines < 1) return false;
     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
     const allStatCount = isAllStatSelection(criteria.statType)
       ? countLines(candLines, isAllStatPercentLine)
@@ -589,10 +592,14 @@
     const cooldownRow = document.getElementById("armorCooldownRow");
     const critRow = document.getElementById("armorCritRow");
     const dropRow = document.getElementById("accessoryDropRow");
+    const addiCooldownRow = document.getElementById("additionalCooldownRow");
 
     if (cooldownRow) cooldownRow.style.display = partsType === PARTS.HAT ? "flex" : "none";
     if (critRow) critRow.style.display = partsType === PARTS.GLOVE ? "flex" : "none";
     if (dropRow) dropRow.style.display = isAccessoryPartsType(partsType) ? "flex" : "none";
+    if (addiCooldownRow) {
+      addiCooldownRow.style.display = isAdditionalCubeSelected() && partsType === PARTS.HAT ? "flex" : "none";
+    }
   }
 
   function refreshAutoPanelVisibility() {
@@ -726,6 +733,9 @@
       }
 
       const statType = getMainStat();
+      const cooldownRequiredInput = document.getElementById("additionalCooldownRequired");
+      const requireCooldown =
+        partsType === PARTS.HAT && cooldownRequiredInput ? cooldownRequiredInput.checked : false;
 
       autoRunning = true;
       updateAutoButton(true);
@@ -733,7 +743,8 @@
         mode: "addi-stat",
         criteria: {
           requiredLines,
-          statType
+          statType,
+          requireCooldown
         }
       });
       return;

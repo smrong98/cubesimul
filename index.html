@@ -456,7 +456,7 @@
           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
             유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
-            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)
+            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)<br>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
@@ -464,6 +464,12 @@
               <option value="2">2줄</option>
               <option value="3">3줄</option>
             </select>
+          </div>
+          <div id="additionalCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <label style="margin:0; font-size:0.85rem;">
+              <input type="checkbox" id="additionalCooldownRequired" />
+              무조건 첫줄 쿨감
+            </label>
           </div>
         </div>
 
