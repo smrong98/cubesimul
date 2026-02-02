@@ -653,6 +653,7 @@
   <!-- 메인 로직 스크립트 -->
   <script>
     const LAST_UPDATE_DATE = "2026-02-02";
+    const SETTINGS_STORAGE_KEY = "cubeSimLastSettings";
 
     let bcProbs = [];
     let wcProbs = [];
@@ -683,6 +684,113 @@
       "피격 시 일정 확률로 데미지",
       "피격 시 일정 확률로 일정 시간 무적"
     ];
+
+    function getStoredSettings() {
+      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch (err) {
+        console.warn("저장된 설정을 읽지 못했습니다:", err);
+        return null;
+      }
+    }
+
+    function applyStoredSettings(settings) {
+      if (!settings) return;
+
+      const itemLevel = document.getElementById("itemLevel");
+      if (itemLevel && settings.itemLevel) {
+        itemLevel.value = String(settings.itemLevel);
+      }
+
+      const partsType = document.getElementById("partsType");
+      if (partsType && settings.partsType) {
+        partsType.value = String(settings.partsType);
+      }
+
+      if (settings.cubeKind) {
+        const cubeRadio = document.querySelector(`input[name="cubeKind"][value="${settings.cubeKind}"]`);
+        if (cubeRadio) cubeRadio.checked = true;
+      }
+
+      if (settings.mainStat) {
+        const statRadio = document.querySelector(`input[name="mainStat"][value="${settings.mainStat}"]`);
+        if (statRadio) statRadio.checked = true;
+      }
+
+      const weaponAutoTarget = document.getElementById("weaponAutoTarget");
+      if (weaponAutoTarget && settings.weaponAutoTarget !== undefined) {
+        weaponAutoTarget.value = String(settings.weaponAutoTarget);
+      }
+
+      const additionalAutoLines = document.getElementById("additionalAutoLines");
+      if (additionalAutoLines && settings.additionalAutoLines) {
+        additionalAutoLines.value = String(settings.additionalAutoLines);
+      }
+
+      const additionalCooldownRequired = document.getElementById("additionalCooldownRequired");
+      if (additionalCooldownRequired && settings.additionalCooldownRequired !== undefined) {
+        additionalCooldownRequired.checked = Boolean(settings.additionalCooldownRequired);
+      }
+
+      const autoMainIED = document.getElementById("autoMainIED");
+      if (autoMainIED && settings.autoMainIED !== undefined) {
+        autoMainIED.value = String(settings.autoMainIED);
+      }
+
+      const autoMainBossMin = document.getElementById("autoMainBossMin");
+      if (autoMainBossMin && settings.autoMainBossMin !== undefined) {
+        autoMainBossMin.value = String(settings.autoMainBossMin);
+      }
+
+      const autoMainSeekDeparture = document.getElementById("autoMainSeekDeparture");
+      if (autoMainSeekDeparture && settings.autoMainSeekDeparture !== undefined) {
+        autoMainSeekDeparture.checked = Boolean(settings.autoMainSeekDeparture);
+      }
+
+      const armorAutoTarget = document.getElementById("armorAutoTarget");
+      if (armorAutoTarget && settings.armorAutoTarget !== undefined) {
+        armorAutoTarget.value = String(settings.armorAutoTarget);
+      }
+
+      const armorCooldownMin = document.getElementById("armorCooldownMin");
+      if (armorCooldownMin && settings.armorCooldownMin !== undefined) {
+        armorCooldownMin.value = String(settings.armorCooldownMin);
+      }
+
+      const armorCritMin = document.getElementById("armorCritMin");
+      if (armorCritMin && settings.armorCritMin !== undefined) {
+        armorCritMin.value = String(settings.armorCritMin);
+      }
+
+      const accessoryDropMin = document.getElementById("accessoryDropMin");
+      if (accessoryDropMin && settings.accessoryDropMin !== undefined) {
+        accessoryDropMin.value = String(settings.accessoryDropMin);
+      }
+    }
+
+    function saveCurrentSettings() {
+      const cubeKind = document.querySelector('input[name="cubeKind"]:checked');
+      const mainStat = document.querySelector('input[name="mainStat"]:checked');
+      const payload = {
+        itemLevel: Number(document.getElementById("itemLevel").value),
+        partsType: Number(document.getElementById("partsType").value),
+        cubeKind: cubeKind ? cubeKind.value : "black",
+        mainStat: mainStat ? mainStat.value : "STR",
+        weaponAutoTarget: Number(document.getElementById("weaponAutoTarget")?.value ?? 0),
+        additionalAutoLines: document.getElementById("additionalAutoLines")?.value ?? "2",
+        additionalCooldownRequired: Boolean(document.getElementById("additionalCooldownRequired")?.checked),
+        autoMainIED: Number(document.getElementById("autoMainIED")?.value ?? 0),
+        autoMainBossMin: Number(document.getElementById("autoMainBossMin")?.value ?? 0),
+        autoMainSeekDeparture: Boolean(document.getElementById("autoMainSeekDeparture")?.checked),
+        armorAutoTarget: Number(document.getElementById("armorAutoTarget")?.value ?? 0),
+        armorCooldownMin: Number(document.getElementById("armorCooldownMin")?.value ?? 0),
+        armorCritMin: Number(document.getElementById("armorCritMin")?.value ?? 0),
+        accessoryDropMin: Number(document.getElementById("accessoryDropMin")?.value ?? 0)
+      };
+      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
+    }
 
     async function loadData() {
       const [bc, wc, ac] = await Promise.all([
@@ -1114,15 +1222,49 @@
 
         updateCubeTag();
         initCurrentOption();
+        saveCurrentSettings();
       });
     });
 
 
     document.getElementById("itemLevel").addEventListener("change", () => {
       initCurrentOption();
+      saveCurrentSettings();
     });
     document.getElementById("partsType").addEventListener("change", () => {
       initCurrentOption();
+      saveCurrentSettings();
+    });
+
+    document.querySelectorAll('input[name="mainStat"]').forEach(r => {
+      r.addEventListener("change", () => {
+        saveCurrentSettings();
+      });
+    });
+
+    [
+      "weaponAutoTarget",
+      "additionalAutoLines",
+      "additionalCooldownRequired",
+      "autoMainIED",
+      "autoMainBossMin",
+      "autoMainSeekDeparture",
+      "armorAutoTarget",
+      "armorCooldownMin",
+      "armorCritMin",
+      "accessoryDropMin"
+    ].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const evt = el.type === "number" || el.tagName === "INPUT" ? "input" : "change";
+      el.addEventListener(evt, () => {
+        saveCurrentSettings();
+      });
+      if (el.tagName === "SELECT" || el.type === "checkbox") {
+        el.addEventListener("change", () => {
+          saveCurrentSettings();
+        });
+      }
     });
 
     document.getElementById("toggleLogBtn").addEventListener("click", () => {
@@ -1130,6 +1272,9 @@
       updateLogVisibility();
     });
 
+    const storedSettings = getStoredSettings();
+    applyStoredSettings(storedSettings);
+    updateCubeTag();
     updateLogVisibility();
 
     // ====== 업데이트 내역 토글 ======
@@ -1190,6 +1335,7 @@
       <div style="margin-bottom:10px;">
         <div style="color:#e5e7eb; font-weight:600;">2026-02-02</div>
         <div>- 에디 자동돌리기 조건 수정</div>
+        <div>- 마지막으로 사용한 설정 저장 기능 추가 </div>
         <div style="color:#e5e7eb; font-weight:600;">2026-01-17</div>
         <div>- 자동돌리기 옆 리셋 버튼 추가</div>
         <div>- PC버전 ui 배치 수정</div>

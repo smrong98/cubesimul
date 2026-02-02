@@ -1,125 +1,298 @@
 diff --git a/index.html b/index.html
-index 2a3027e71683e7242bdb79fcfe47a5ef064e6347..807841a252ecfbe888e80b10c5d13082dc30fd6f 100644
+index 15174c5b5c317660c7d5050734b7358c69ee2f2e..af7a92f81a3fe3919206ff60b042ae88e261c38b 100644
 --- a/index.html
 +++ b/index.html
-@@ -1,45 +1,60 @@
- <!DOCTYPE html>
- <html lang="ko">
- <head>
-   <meta charset="UTF-8" />
-   <title>잠재능력(큐브) 재설정 시뮬레이터</title>
-   <meta name="viewport" content="width=device-width, initial-scale=1" />
-   <style>
-     * { box-sizing: border-box; }
-     body {
-       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-       background:#121212;
-       color:#e5e7eb;
-       margin:0;
-       padding:16px;
-     }
-     h1 {
--      margin:0 0 12px;
-+      margin:0 0 6px;
-       font-size:1.4rem;
-       color:#8CAF0B;
-     }
-+    .subtitle {
-+      margin:-6px 0 10px;
-+      font-size:1rem;
-+      color:#e5e7eb;
-+      font-weight:600;
-+    }
-+    .page-meta {
-+      display:flex;
-+      flex-wrap:wrap;
-+      gap:8px;
-+      font-size:0.85rem;
-+      color:#a1a1aa;
-+      line-height:1.2;
-+      margin-bottom:14px;
-+    }
+@@ -631,81 +631,189 @@
+         <button class="btn btn-secondary" id="autoResetBtn">리셋</button>
+         <button class="btn btn-secondary" id="autoRollBtn">자동 돌리기 시작</button>
+         <button class="btn btn-primary" id="rollBtn">3회 재설정 하기</button>
+       </div>
+       </section>
  
-     .layout {
-       display:grid;
-       grid-template-columns: minmax(280px, 340px) minmax(320px, 1fr);
-       gap:16px;
-       align-items:start;
-     }
-     .layout-column {
-       display:flex;
-       flex-direction:column;
-       gap:16px;
-       align-items:stretch;
-     }
-     @media (max-width: 768px) {
-       .layout {
-         display:flex;
-         flex-direction:column;
-         align-items:stretch;
-       }
-       .layout-column {
-         gap:16px;
-         width:100%;
-       }
-     }
- 
-@@ -338,53 +353,55 @@
-       padding:2px 8px;
-       cursor:pointer;
-     }
-     .log-toggle-btn:hover {
-       background:#1f1f1f;
-     }
- 
-     #card-settings,
-     #card-options,
-     #card-stats,
-     #card-log {
-       width:100%;
-     }
-   </style>
-     <!-- Google tag (gtag.js) -->
-   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VZJQL22RBV"></script>
-   <script>
-     window.dataLayer = window.dataLayer || [];
-     function gtag(){dataLayer.push(arguments);}
-     gtag('js', new Date());
- 
-     gtag('config', 'G-VZJQL22RBV');
-   </script>
- </head>
- <body>
--  <h1>잠재능력 재설정 시뮬레이터 (제작: 크로아-윈메롱)</h1>
--  <div id="updateDate"
--  style="margin-top:2px; margin-bottom:14px; font-size:0.85rem; color:#a1a1aa; line-height:1.2;">
-+  <h1>잠재능력 재설정 시뮬레이터</h1>
-+  <div class="subtitle">큐브 시뮬레이터</div>
-+  <div class="page-meta">
-+    <span>제작자: 크로아 - 윈메롱</span>
-+    <span id="updateDate"></span>
+       <!-- 3. 재설정 현황 -->
+       <section class="card" id="card-stats">
+         <h2>재설정 현황</h2>
+         <div class="stats-row">
+           <div id="rollCountTag">재설정 횟수: 0</div>
+           <div id="mesoTag">소모 메소: 0 메소</div>
+           <div id="azmosTag" style="display:none; color:#a1a1aa; font-size:0.85rem;">아즈모스 협곡 1만점: 0주</div>
+           <div id="cubeTypeTag" class="tag">
+             <span class="tag-dot"></span>
+             <span>윗잠재</span>
+           </div>
+         </div>
+       </section>
+     </div>
    </div>
  
-   <div class="layout">
-     <div class="layout-column">
-       <!-- 1. 설정 카드 -->
-       <section class="card" id="card-settings">
-         <h2>설정</h2>
+   <!-- 메인 로직 스크립트 -->
+   <script>
+     const LAST_UPDATE_DATE = "2026-02-02";
++    const SETTINGS_STORAGE_KEY = "cubeSimLastSettings";
  
-       <div class="row">
-         <div>
-           <label for="itemLevel">아이템 레벨</label>
-           <select id="itemLevel">
-             <option value="100">100</option>
-             <option value="120">120</option>
-             <option value="130">130</option>
-             <option value="140">140</option>
-             <option value="150">150</option>
-             <option value="160">160</option>
-             <option value="200" selected>200</option>
-             <option value="250">250</option>
-           </select>
-         </div>
-         <div>
-           <label for="partsType">장비 부위</label>
-           <select id="partsType">
+     let bcProbs = [];
+     let wcProbs = [];
+     let acProbs = []; // 명장의 큐브(윗잠재)
+     let allProbs = [];
+ 
+     const CUBE_ID_BLACK = "5062010";   // 기존 윗잠재(블랙)
+     const CUBE_ID_ADDI  = "5062500";   // 기존 에디
+     const CUBE_ID_MEISTER = "2711004"; // acprobs.json 확인값
+ 
+     let currentLines = [];
+     let rollCandidates = [[], [], []];
+ 
+     let meisterUsed = 0; // 명장의 큐브 소모량(개)
+     let rollCount = 0;
+     let mesoUsed = 0;
+     let logEntries = [];
+ 
+     let logVisible = false;
+ 
+     const poolCache = new Map();
+ 
+     const ONLY_ONE_KEYWORDS = [
+       "쓸만한",
+       "피격 후 무적"
+     ];
+     const AT_MOST_TWO_KEYWORDS = [
+       "피격 시 일정 확률로 데미지",
+       "피격 시 일정 확률로 일정 시간 무적"
+     ];
+ 
++    function getStoredSettings() {
++      const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
++      if (!raw) return null;
++      try {
++        return JSON.parse(raw);
++      } catch (err) {
++        console.warn("저장된 설정을 읽지 못했습니다:", err);
++        return null;
++      }
++    }
++
++    function applyStoredSettings(settings) {
++      if (!settings) return;
++
++      const itemLevel = document.getElementById("itemLevel");
++      if (itemLevel && settings.itemLevel) {
++        itemLevel.value = String(settings.itemLevel);
++      }
++
++      const partsType = document.getElementById("partsType");
++      if (partsType && settings.partsType) {
++        partsType.value = String(settings.partsType);
++      }
++
++      if (settings.cubeKind) {
++        const cubeRadio = document.querySelector(`input[name="cubeKind"][value="${settings.cubeKind}"]`);
++        if (cubeRadio) cubeRadio.checked = true;
++      }
++
++      if (settings.mainStat) {
++        const statRadio = document.querySelector(`input[name="mainStat"][value="${settings.mainStat}"]`);
++        if (statRadio) statRadio.checked = true;
++      }
++
++      const weaponAutoTarget = document.getElementById("weaponAutoTarget");
++      if (weaponAutoTarget && settings.weaponAutoTarget !== undefined) {
++        weaponAutoTarget.value = String(settings.weaponAutoTarget);
++      }
++
++      const additionalAutoLines = document.getElementById("additionalAutoLines");
++      if (additionalAutoLines && settings.additionalAutoLines) {
++        additionalAutoLines.value = String(settings.additionalAutoLines);
++      }
++
++      const additionalCooldownRequired = document.getElementById("additionalCooldownRequired");
++      if (additionalCooldownRequired && settings.additionalCooldownRequired !== undefined) {
++        additionalCooldownRequired.checked = Boolean(settings.additionalCooldownRequired);
++      }
++
++      const autoMainIED = document.getElementById("autoMainIED");
++      if (autoMainIED && settings.autoMainIED !== undefined) {
++        autoMainIED.value = String(settings.autoMainIED);
++      }
++
++      const autoMainBossMin = document.getElementById("autoMainBossMin");
++      if (autoMainBossMin && settings.autoMainBossMin !== undefined) {
++        autoMainBossMin.value = String(settings.autoMainBossMin);
++      }
++
++      const autoMainSeekDeparture = document.getElementById("autoMainSeekDeparture");
++      if (autoMainSeekDeparture && settings.autoMainSeekDeparture !== undefined) {
++        autoMainSeekDeparture.checked = Boolean(settings.autoMainSeekDeparture);
++      }
++
++      const armorAutoTarget = document.getElementById("armorAutoTarget");
++      if (armorAutoTarget && settings.armorAutoTarget !== undefined) {
++        armorAutoTarget.value = String(settings.armorAutoTarget);
++      }
++
++      const armorCooldownMin = document.getElementById("armorCooldownMin");
++      if (armorCooldownMin && settings.armorCooldownMin !== undefined) {
++        armorCooldownMin.value = String(settings.armorCooldownMin);
++      }
++
++      const armorCritMin = document.getElementById("armorCritMin");
++      if (armorCritMin && settings.armorCritMin !== undefined) {
++        armorCritMin.value = String(settings.armorCritMin);
++      }
++
++      const accessoryDropMin = document.getElementById("accessoryDropMin");
++      if (accessoryDropMin && settings.accessoryDropMin !== undefined) {
++        accessoryDropMin.value = String(settings.accessoryDropMin);
++      }
++    }
++
++    function saveCurrentSettings() {
++      const cubeKind = document.querySelector('input[name="cubeKind"]:checked');
++      const mainStat = document.querySelector('input[name="mainStat"]:checked');
++      const payload = {
++        itemLevel: Number(document.getElementById("itemLevel").value),
++        partsType: Number(document.getElementById("partsType").value),
++        cubeKind: cubeKind ? cubeKind.value : "black",
++        mainStat: mainStat ? mainStat.value : "STR",
++        weaponAutoTarget: Number(document.getElementById("weaponAutoTarget")?.value ?? 0),
++        additionalAutoLines: document.getElementById("additionalAutoLines")?.value ?? "2",
++        additionalCooldownRequired: Boolean(document.getElementById("additionalCooldownRequired")?.checked),
++        autoMainIED: Number(document.getElementById("autoMainIED")?.value ?? 0),
++        autoMainBossMin: Number(document.getElementById("autoMainBossMin")?.value ?? 0),
++        autoMainSeekDeparture: Boolean(document.getElementById("autoMainSeekDeparture")?.checked),
++        armorAutoTarget: Number(document.getElementById("armorAutoTarget")?.value ?? 0),
++        armorCooldownMin: Number(document.getElementById("armorCooldownMin")?.value ?? 0),
++        armorCritMin: Number(document.getElementById("armorCritMin")?.value ?? 0),
++        accessoryDropMin: Number(document.getElementById("accessoryDropMin")?.value ?? 0)
++      };
++      localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(payload));
++    }
++
+     async function loadData() {
+       const [bc, wc, ac] = await Promise.all([
+         fetch("bcprobs.json").then(r => r.json()),
+         fetch("wcprobs.json").then(r => r.json()),
+         fetch("acprobs.json").then(r => r.json())
+       ]);
+       bcProbs = bc;
+       wcProbs = wc;
+       acProbs = ac;
+ 
+       allProbs = [...bcProbs, ...wcProbs, ...acProbs]; // 핵심
+       console.log("데이터 로드 완료:", allProbs.length);
+       initCurrentOption();
+     }
+ 
+     function formatAzmosWeeksFromCubes(cubes) {
+       const weeks = Math.ceil((cubes || 0) / 29); // 29개/주, 올림
+       if (weeks <= 52) return `${weeks}주`;
+ 
+       const years = Math.floor(weeks / 52);
+       const rem = weeks % 52;
+       if (rem === 0) return `${years}년`;
+       return `${years}년 ${rem}주`;
+     }
+ 
+@@ -1092,66 +1200,103 @@
+ 
+     document.getElementById("applyResetBtn").addEventListener("click", handleReset);
+     document.getElementById("autoResetBtn").addEventListener("click", handleReset);
+ 
+ 
+     document.getElementById("rollBtn").addEventListener("click", () => {
+       doOneRollStep();
+     });
+ 
+     document.querySelectorAll(".option-box.candidate").forEach(box => {
+       box.addEventListener("click", (e) => {
+         const idx = Number(e.currentTarget.getAttribute("data-choice")) - 1;
+         chooseCandidate(idx);
+       });
+     });
+ 
+     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+       r.addEventListener("change", () => {
+         // 큐브 타입 변경 시 통계 초기화
+         meisterUsed = 0;
+         mesoUsed = 0;
+         rollCount = 0;
+ 
+         updateCubeTag();
+         initCurrentOption();
++        saveCurrentSettings();
+       });
+     });
+ 
+ 
+     document.getElementById("itemLevel").addEventListener("change", () => {
+       initCurrentOption();
++      saveCurrentSettings();
+     });
+     document.getElementById("partsType").addEventListener("change", () => {
+       initCurrentOption();
++      saveCurrentSettings();
++    });
++
++    document.querySelectorAll('input[name="mainStat"]').forEach(r => {
++      r.addEventListener("change", () => {
++        saveCurrentSettings();
++      });
++    });
++
++    [
++      "weaponAutoTarget",
++      "additionalAutoLines",
++      "additionalCooldownRequired",
++      "autoMainIED",
++      "autoMainBossMin",
++      "autoMainSeekDeparture",
++      "armorAutoTarget",
++      "armorCooldownMin",
++      "armorCritMin",
++      "accessoryDropMin"
++    ].forEach(id => {
++      const el = document.getElementById(id);
++      if (!el) return;
++      const evt = el.type === "number" || el.tagName === "INPUT" ? "input" : "change";
++      el.addEventListener(evt, () => {
++        saveCurrentSettings();
++      });
++      if (el.tagName === "SELECT" || el.type === "checkbox") {
++        el.addEventListener("change", () => {
++          saveCurrentSettings();
++        });
++      }
+     });
+ 
+     document.getElementById("toggleLogBtn").addEventListener("click", () => {
+       logVisible = !logVisible;
+       updateLogVisibility();
+     });
+ 
++    const storedSettings = getStoredSettings();
++    applyStoredSettings(storedSettings);
++    updateCubeTag();
+     updateLogVisibility();
+ 
+     // ====== 업데이트 내역 토글 ======
+     window.addEventListener("load", () => {
+       const box = document.getElementById("changelog");
+       const btn = document.getElementById("toggleChangelogBtn");
+       if (!box || !btn) return;
+ 
+       let changelogVisible = false;
+ 
+       function updateChangelogVisibility() {
+         box.style.display = changelogVisible ? "block" : "none";
+         btn.textContent = changelogVisible ? "업데이트 내역 접기" : "업데이트 내역 보기";
+       }
+ 
+       btn.addEventListener("click", () => {
+         changelogVisible = !changelogVisible;
+         updateChangelogVisibility();
+       });
+ 
+       updateChangelogVisibility(); // 초기 상태 반영
+     });
+ 
+ 
+     loadData().catch(err => {
