@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>잠재능력 재설정 시뮬레이터</title>
+  <title>잠재능력(큐브) 재설정 시뮬레이터</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     * { box-sizing: border-box; }
@@ -456,12 +456,13 @@
           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
           <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
             유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
-            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)<br>
+            올스탯 선택 시 2줄은 올스탯 1줄 이상, 2.5줄/3줄은 올스탯 2줄 이상<br>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
             <select id="additionalAutoLines" style="max-width:110px;">
               <option value="2">2줄</option>
+              <option value="2.5">2.5줄</option>
               <option value="3">3줄</option>
             </select>
           </div>
@@ -633,7 +634,7 @@
 
   <!-- 메인 로직 스크립트 -->
   <script>
-    const LAST_UPDATE_DATE = "2026-01-17";
+    const LAST_UPDATE_DATE = "2026-02-02";
 
     let bcProbs = [];
     let wcProbs = [];
@@ -1169,6 +1170,8 @@
 
       <!-- 아래에 업데이트 내역을 계속 쌓아가면 됩니다 -->
       <div style="margin-bottom:10px;">
+        <div style="color:#e5e7eb; font-weight:600;">2026-02-02</div>
+        <div>- 에디 자동돌리기 조건 수정</div>
         <div style="color:#e5e7eb; font-weight:600;">2026-01-17</div>
         <div>- 자동돌리기 옆 리셋 버튼 추가</div>
         <div>- PC버전 ui 배치 수정</div>

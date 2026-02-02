@@ -1,8 +1,8 @@
 diff --git a/index.html b/index.html
-index c3146d2d7c7f4e6b8a25ad75629025757dab4702..db7eb8132bdd0e53e27bdb3a1f3074b5fcfe3271 100644
+index 2df12b8e2cbe21104e1e8fb8d7b197ddc7f6f09c..18f9fbf0c2735b9a3c00f87c516980061fc478d8 100644
 --- a/index.html
 +++ b/index.html
-@@ -434,59 +434,66 @@
+@@ -434,56 +434,58 @@
  
        <!-- 무기 전용 자동 돌리기 설정 UI -->
        <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
@@ -28,23 +28,24 @@ index c3146d2d7c7f4e6b8a25ad75629025757dab4702..db7eb8132bdd0e53e27bdb3a1f3074b5
            <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
            <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
              유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
--            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)
-+            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)<br>
-+            쿨감 -1초 옵션이 2줄 이상이면 줄 수 설정과 상관없이 즉시 멈춤
+-            2줄 또는 3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 3줄은 올스탯 2줄 이상)<br>
++            2줄/2.5줄/3줄 만족 유효옵션으로 취급 (올스탯 선택 시 2줄은 올스탯 1줄 이상, 2.5줄/3줄은 올스탯 2줄 이상)<br>
++            3줄은 주스탯+n 및 크리티컬 데미지 1% 제외, 9레벨당 주스탯+1과 공격력 동시 등장 시 무효<br>
            </div>
            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
              <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
              <select id="additionalAutoLines" style="max-width:110px;">
                <option value="2">2줄</option>
++              <option value="2.5">2.5줄</option>
                <option value="3">3줄</option>
              </select>
            </div>
-+          <div id="additionalCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-+            <label style="margin:0; font-size:0.85rem;">
-+              <input type="checkbox" id="additionalCooldownRequired" />
-+              무조건 쿨타임 감소 옵션 포함
-+            </label>
-+          </div>
+           <div id="additionalCooldownRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+             <label style="margin:0; font-size:0.85rem;">
+               <input type="checkbox" id="additionalCooldownRequired" />
+               무조건 첫줄 쿨감
+             </label>
+           </div>
          </div>
  
          <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
@@ -61,12 +62,3 @@ index c3146d2d7c7f4e6b8a25ad75629025757dab4702..db7eb8132bdd0e53e27bdb3a1f3074b5
                <label for="autoMainIED" style="margin:0; font-size:0.85rem;">최대 방무 몇 줄</label>
                <select id="autoMainIED" style="max-width:110px;">
                  <option value="0">0</option>
-                 <option value="1">1</option>
-                 <option value="2">2</option>
-                 <option value="3">3</option>
-               </select>
-             </div>
- 
-             <div id="autoMainBossRow" style="display:flex; align-items:center; gap:8px;">
-               <label for="autoMainBossMin" style="margin:0; font-size:0.85rem;">최대 보공 몇 줄</label>
-               <select id="autoMainBossMin" style="max-width:110px;"></select>

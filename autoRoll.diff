@@ -1,8 +1,45 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2256daf88 100644
+index 6637fdfa791df394a8e9b4a28de124f2256daf88..33e3c767f66561d04241b30f814d569441c61609 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -318,50 +318,53 @@
+@@ -289,103 +289,154 @@
+     return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
+   }
+ 
+   function isMainStatFlatLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const types = getAdditionalMainStatTypes(statType);
+     return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
+   }
+ 
+   function isAdditionalAttackFlatLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     if (statType === "INT") {
+       return /^마력 \+\d+$/.test(text);
+     }
+     if (statType === "ANY") {
+       return /^(공격력|마력) \+\d+$/.test(text);
+     }
+     return /^공격력 \+\d+$/.test(text);
+   }
+ 
+   function isAdditionalCritDamageLine(line) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     return /^크리티컬 데미지 \+\d+%$/.test(text);
+   }
+ 
++  function getAdditionalCritDamagePercent(line) {
++    const text = (line && line.optionText) ? line.optionText : "";
++    const match = text.match(/^크리티컬 데미지 \+(\d+)%$/);
++    if (!match) return null;
++    const value = parseInt(match[1], 10);
++    return isNaN(value) ? null : value;
++  }
++
+   function isAdditionalCooldownLine(line) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     return text === "스킬 재사용 대기시간 -1초";
+   }
  
    function isAdditionalPerLevelStatLine(line, statType) {
      const text = (line && line.optionText) ? line.optionText : "";
@@ -10,6 +47,19 @@ index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2
      return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
    }
  
++  function getAdditionalPerLevelStatValue(line, statType) {
++    const text = (line && line.optionText) ? line.optionText : "";
++    const types = getAdditionalMainStatTypes(statType);
++    for (const type of types) {
++      const match = text.match(new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+(\\d+)$`));
++      if (match) {
++        const value = parseInt(match[1], 10);
++        return isNaN(value) ? null : value;
++      }
++    }
++    return null;
++  }
++
    function isAdditionalValidLine(line, statType) {
      return (
        isMainStatPercentLine(line, statType) ||
@@ -22,100 +72,107 @@ index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2
      );
    }
  
++  function isAdditionalValidLineStrict(line, statType) {
++    const critValue = getAdditionalCritDamagePercent(line);
++    const critAllowed = critValue !== null && critValue !== 1;
++    return (
++      isMainStatPercentLine(line, statType) ||
++      isAllStatPercentLine(line) ||
++      isAdditionalAttackFlatLine(line, statType) ||
++      critAllowed ||
++      isAdditionalCooldownLine(line) ||
++      isAdditionalPerLevelStatLine(line, statType)
++    );
++  }
++
    function isAllStatSelection(statType) {
      return statType === "ALLSTAT";
    }
  
    function isAdditionalStatValidSet(candLines, criteria) {
      if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-+    const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
-+    if (cooldownLines >= 2) return true;
-+    if (criteria.requireCooldown && cooldownLines < 1) return false;
+     const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
+     if (cooldownLines >= 2) return true;
+     if (criteria.requireCooldown && cooldownLines < 1) return false;
      const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
++    const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
      const allStatCount = isAllStatSelection(criteria.statType)
        ? countLines(candLines, isAllStatPercentLine)
        : 0;
++    const requiredLines = criteria.requiredLines;
++    const isTwoLine = requiredLines === 2;
++    const isTwoHalfLine = requiredLines === 2.5;
++    const isThreeLine = requiredLines === 3;
  
      if (isAllStatSelection(criteria.statType)) {
-       if (criteria.requiredLines === 2 && allStatCount < 1) return false;
-       if (criteria.requiredLines === 3 && allStatCount < 2) return false;
+-      if (criteria.requiredLines === 2 && allStatCount < 1) return false;
+-      if (criteria.requiredLines === 3 && allStatCount < 2) return false;
++      if (isTwoLine && allStatCount < 1) return false;
++      if ((isTwoHalfLine || isThreeLine) && allStatCount < 2) return false;
      }
  
-     if (criteria.requiredLines === 2) {
+-    if (criteria.requiredLines === 2) {
++    if (isTwoLine) {
        return validCount >= 2;
      }
  
-     if (validCount >= 3) return true;
+-    if (validCount >= 3) return true;
++    if (isTwoHalfLine) {
++      if (validCount >= 3) return true;
++
++      const firstLine = candLines[0];
++      const secondLine = candLines[1];
++      const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
++      const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
++      return firstIsMainPercent && secondIsMainPercent;
++    }
++
++    if (isThreeLine) {
++      if (strictValidCount < 3) return false;
++      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1);
++      const hasAttackFlat = candLines.some(line => isAdditionalAttackFlatLine(line, criteria.statType));
++      if (hasPerLevelPlusOne && hasAttackFlat) return false;
++      return true;
++    }
  
-     const firstLine = candLines[0];
-     const secondLine = candLines[1];
-     const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
-     const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
-     return firstIsMainPercent && secondIsMainPercent;
+-    const firstLine = candLines[0];
+-    const secondLine = candLines[1];
+-    const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
+-    const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
+-    return firstIsMainPercent && secondIsMainPercent;
++    return false;
    }
  
    function isMainValidSet(candLines, context, criteria) {
      if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-@@ -567,54 +570,58 @@
-     });
-     container.querySelectorAll("[data-auto-kind='addi-stat']").forEach(el => {
-       el.style.display = addi && (isAccessory || isArmor) ? "block" : "none";
-     });
-     container.querySelectorAll("[data-auto-kind='stat']").forEach(el => {
-       el.style.display = !addi && (isAccessory || isArmor) ? "block" : "none";
-     });
-   }
- 
-   function updateMainStatAvailability() {
-     const anyRadio = document.querySelector('input[name="mainStat"][value="ANY"]');
-     if (!anyRadio) return;
-     const isWeapon = isWeaponPartsType(getSelectedPartsTypeSafe());
-     anyRadio.disabled = isWeapon;
-     if (isWeapon && anyRadio.checked) {
-       const fallback = document.querySelector('input[name="mainStat"][value="STR"]');
-       if (fallback) fallback.checked = true;
-     }
-   }
- 
-   function updateSpecialOptionVisibility() {
-     const partsType = getSelectedPartsTypeSafe();
-     const cooldownRow = document.getElementById("armorCooldownRow");
-     const critRow = document.getElementById("armorCritRow");
-     const dropRow = document.getElementById("accessoryDropRow");
-+    const addiCooldownRow = document.getElementById("additionalCooldownRow");
- 
-     if (cooldownRow) cooldownRow.style.display = partsType === PARTS.HAT ? "flex" : "none";
-     if (critRow) critRow.style.display = partsType === PARTS.GLOVE ? "flex" : "none";
-     if (dropRow) dropRow.style.display = isAccessoryPartsType(partsType) ? "flex" : "none";
-+    if (addiCooldownRow) {
-+      addiCooldownRow.style.display = isAdditionalCubeSelected() && partsType === PARTS.HAT ? "flex" : "none";
-+    }
-   }
- 
-   function refreshAutoPanelVisibility() {
-     const container = document.getElementById("weaponAutoContainer");
-     const supported = isSupportedParts();
- 
-     if (container) {
-       container.style.display = supported ? "block" : "none";
-     }
-     if (!supported) {
-       stopAuto();
-     }
- 
-     // Boss UI: 무기/보조무기에서만 노출
-     const bossRow = document.getElementById("autoMainBossRow");
-     if (bossRow) {
-       bossRow.style.display = isWeaponOrSecondarySelected() ? "flex" : "none";
-     }
- 
-     updateBossMaxOptions();
-     setAutoKindVisibility();
-     updateSpecialOptionVisibility();
-     updateMainStatAvailability();
-     updateAutoButton(autoRunning);
-   }
-@@ -704,58 +711,62 @@
+     const partsType = context.partsType;
+     const iedMaxN = criteria.iedMaxN;
+     const bossMaxM = criteria.bossMaxM;
+     const mainStat = getEffectiveMainStat();
+   
+     const iedCount = countLines(candLines, isIEDLine);
+   
+     // ✅ 변경: "정확히 N"이 아니라 "최대 N" (0~N 허용)
+     if (iedCount > iedMaxN) return false;
+   
+     if (partsType === PARTS.EMBLEM) {
+       // 엠블렘: Boss 없음 (혹시 데이터에 섞이면 무효 처리)
+       const bossCount = countLines(candLines, isBossLine);
+       if (bossCount > 0) return false;
+   
+       // IED가 아닌 줄은 전부 ATK/MATK% 이어야 함
+       for (const l of candLines) {
+         if (isIEDLine(l)) continue;
+         if (!isAtkLine(l, mainStat)) return false;
+       }
+       return !criteria.seekDeparture || hasDepartureLine(candLines, context);
+@@ -705,51 +756,51 @@
+           return;
+         }
+         const targetPercent = Number(targetInput.value);
+         if (!targetPercent || targetPercent <= 0) {
+           alert("올바른 목표 %를 입력해주세요.");
+           return;
          }
  
          autoRunning = true;
@@ -135,15 +192,16 @@ index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2
          return;
        }
        const requiredLines = Number(requiredLinesSelect.value);
-       if (requiredLines !== 2 && requiredLines !== 3) {
+-      if (requiredLines !== 2 && requiredLines !== 3) {
++      if (requiredLines !== 2 && requiredLines !== 2.5 && requiredLines !== 3) {
          alert("올바른 유효 옵션 줄 수를 선택해주세요.");
          return;
        }
  
        const statType = getMainStat();
-+      const cooldownRequiredInput = document.getElementById("additionalCooldownRequired");
-+      const requireCooldown =
-+        partsType === PARTS.HAT && cooldownRequiredInput ? cooldownRequiredInput.checked : false;
+       const cooldownRequiredInput = document.getElementById("additionalCooldownRequired");
+       const requireCooldown =
+         partsType === PARTS.HAT && cooldownRequiredInput ? cooldownRequiredInput.checked : false;
  
        autoRunning = true;
        updateAutoButton(true);
@@ -151,9 +209,8 @@ index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2
          mode: "addi-stat",
          criteria: {
            requiredLines,
--          statType
-+          statType,
-+          requireCooldown
+           statType,
+           requireCooldown
          }
        });
        return;
@@ -162,20 +219,3 @@ index 9056ae50e7c8d41d5bda313d823ba3b8867874e9..6637fdfa791df394a8e9b4a28de124f2
      const partsType = getSelectedPartsTypeSafe();
      if (!isWeaponPartsType(partsType)) {
        // ====== stat(장신구/방어구) ======
-       const targetInput = document.getElementById("armorAutoTarget");
-       if (!targetInput) {
-         alert("장신구/방어구 자동 돌리기 목표 % 입력칸을 찾을 수 없습니다.");
-         return;
-       }
-       const targetPercent = Number(targetInput.value);
-       if (isNaN(targetPercent) || targetPercent < 0) {
-         alert("올바른 목표 %를 입력해주세요.");
-         return;
-       }
- 
-       const statType = getMainStat();
- 
-       let minCooldown = 0;
-       const cooldownSelect = document.getElementById("armorCooldownMin");
-       if (cooldownSelect && partsType === PARTS.HAT) {
-         minCooldown = Number(cooldownSelect.value);

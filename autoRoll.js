@@ -311,6 +311,14 @@
     return /^크리티컬 데미지 \+\d+%$/.test(text);
   }
 
+  function getAdditionalCritDamagePercent(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const match = text.match(/^크리티컬 데미지 \+(\d+)%$/);
+    if (!match) return null;
+    const value = parseInt(match[1], 10);
+    return isNaN(value) ? null : value;
+  }
+
   function isAdditionalCooldownLine(line) {
     const text = (line && line.optionText) ? line.optionText : "";
     return text === "스킬 재사용 대기시간 -1초";
@@ -322,6 +330,19 @@
     return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
   }
 
+  function getAdditionalPerLevelStatValue(line, statType) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const types = getAdditionalMainStatTypes(statType);
+    for (const type of types) {
+      const match = text.match(new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+(\\d+)$`));
+      if (match) {
+        const value = parseInt(match[1], 10);
+        return isNaN(value) ? null : value;
+      }
+    }
+    return null;
+  }
+
   function isAdditionalValidLine(line, statType) {
     return (
       isMainStatPercentLine(line, statType) ||
@@ -329,6 +350,19 @@
       isMainStatFlatLine(line, statType) ||
       isAdditionalAttackFlatLine(line, statType) ||
       isAdditionalCritDamageLine(line) ||
+      isAdditionalCooldownLine(line) ||
+      isAdditionalPerLevelStatLine(line, statType)
+    );
+  }
+
+  function isAdditionalValidLineStrict(line, statType) {
+    const critValue = getAdditionalCritDamagePercent(line);
+    const critAllowed = critValue !== null && critValue !== 1;
+    return (
+      isMainStatPercentLine(line, statType) ||
+      isAllStatPercentLine(line) ||
+      isAdditionalAttackFlatLine(line, statType) ||
+      critAllowed ||
       isAdditionalCooldownLine(line) ||
       isAdditionalPerLevelStatLine(line, statType)
     );
@@ -344,26 +378,43 @@
     if (cooldownLines >= 2) return true;
     if (criteria.requireCooldown && cooldownLines < 1) return false;
     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
+    const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
     const allStatCount = isAllStatSelection(criteria.statType)
       ? countLines(candLines, isAllStatPercentLine)
       : 0;
+    const requiredLines = criteria.requiredLines;
+    const isTwoLine = requiredLines === 2;
+    const isTwoHalfLine = requiredLines === 2.5;
+    const isThreeLine = requiredLines === 3;
 
     if (isAllStatSelection(criteria.statType)) {
-      if (criteria.requiredLines === 2 && allStatCount < 1) return false;
-      if (criteria.requiredLines === 3 && allStatCount < 2) return false;
+      if (isTwoLine && allStatCount < 1) return false;
+      if ((isTwoHalfLine || isThreeLine) && allStatCount < 2) return false;
     }
 
-    if (criteria.requiredLines === 2) {
+    if (isTwoLine) {
       return validCount >= 2;
     }
 
-    if (validCount >= 3) return true;
+    if (isTwoHalfLine) {
+      if (validCount >= 3) return true;
 
-    const firstLine = candLines[0];
-    const secondLine = candLines[1];
-    const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
-    const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
-    return firstIsMainPercent && secondIsMainPercent;
+      const firstLine = candLines[0];
+      const secondLine = candLines[1];
+      const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
+      const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
+      return firstIsMainPercent && secondIsMainPercent;
+    }
+
+    if (isThreeLine) {
+      if (strictValidCount < 3) return false;
+      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1);
+      const hasAttackFlat = candLines.some(line => isAdditionalAttackFlatLine(line, criteria.statType));
+      if (hasPerLevelPlusOne && hasAttackFlat) return false;
+      return true;
+    }
+
+    return false;
   }
 
   function isMainValidSet(candLines, context, criteria) {
@@ -727,7 +778,7 @@
         return;
       }
       const requiredLines = Number(requiredLinesSelect.value);
-      if (requiredLines !== 2 && requiredLines !== 3) {
+      if (requiredLines !== 2 && requiredLines !== 2.5 && requiredLines !== 3) {
         alert("올바른 유효 옵션 줄 수를 선택해주세요.");
         return;
       }
