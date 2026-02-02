@@ -377,6 +377,11 @@
     const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
     if (cooldownLines >= 2) return true;
     if (criteria.requireCooldown && cooldownLines < 1) return false;
+    const perLevelPlusOneLines = countLines(
+      candLines,
+      line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1
+    );
+    if (perLevelPlusOneLines >= 2) return false;
     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
     const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
     const allStatCount = isAllStatSelection(criteria.statType)
