@@ -14,9 +14,23 @@
       padding:16px;
     }
     h1 {
-      margin:0 0 12px;
+      margin:0 0 0px;
       font-size:1.4rem;
       color:#8CAF0B;
+    }
+    .subtitle {
+      font-size:1rem;
+      color:#6d831b;
+      font-weight:600;
+    }
+    .page-meta {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      font-size:0.85rem;
+      color:#a1a1aa;
+      line-height:1.2;
+      margin-bottom:14px;
     }
 
     .layout {
@@ -360,9 +374,11 @@
   </script>
 </head>
 <body>
-  <h1>잠재능력 재설정 시뮬레이터 (제작: 크로아-윈메롱)</h1>
-  <div id="updateDate"
-  style="margin-top:2px; margin-bottom:14px; font-size:0.85rem; color:#a1a1aa; line-height:1.2;">
+  <h1>잠재능력 재설정 시뮬레이터</h1>
+  <div class="subtitle">큐브 시뮬레이터</div>
+  <div class="page-meta">
+    <span id="updateDate"></span>
+    <span>/ 제작: 크로아 - 윈메롱</span>
   </div>
 
   <div class="layout">
@@ -434,10 +450,12 @@
 
       <!-- 무기 전용 자동 돌리기 설정 UI -->
       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
+        <!--
         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
           무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
         </div>
+        -->
 
         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
         <div data-auto-kind="addi-weapon">
@@ -1145,7 +1163,7 @@
   <!-- 자동 돌리기 전용 스크립트 (별도 파일) -->
   <script src="autoRoll.js"></script>
   <footer style="margin-top:18px; color:#71717a; font-size:0.75rem; text-align:center;">
-    <div>제작: 크로아 - 윈메롱</div>
+    <!-- <div>제작: 크로아 - 윈메롱</div> -->
   
     <div style="margin-top:6px;">
       <button type="button" id="toggleChangelogBtn"
