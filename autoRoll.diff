@@ -1,8 +1,97 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index 33e3c767f66561d04241b30f814d569441c61609..b8f3f1363031c2a5560fcf819e34e9ecf6ec75ce 100644
+index b8f3f1363031c2a5560fcf819e34e9ecf6ec75ce..8834644f8b668930b9eb7cd34ef2298bc3ec7037 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -355,50 +355,55 @@
+@@ -284,159 +284,181 @@
+ 
+   function isMainStatPercentLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const types = getAdditionalMainStatTypes(statType);
+     if (statType === "ALLSTAT" && isAllStatPercentLine(line)) return true;
+     return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
+   }
+ 
+   function isMainStatFlatLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const types = getAdditionalMainStatTypes(statType);
+     return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
+   }
+ 
+   function isAdditionalAttackFlatLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     if (statType === "INT") {
+       return /^마력 \+\d+$/.test(text);
+     }
+     if (statType === "ANY") {
+       return /^(공격력|마력) \+\d+$/.test(text);
+     }
+     return /^공격력 \+\d+$/.test(text);
+   }
+ 
++  function isAdditionalAttackFlatLineAny(line) {
++    const text = (line && line.optionText) ? line.optionText : "";
++    return /^(공격력|마력) \+\d+$/.test(text);
++  }
++
+   function isAdditionalCritDamageLine(line) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     return /^크리티컬 데미지 \+\d+%$/.test(text);
+   }
+ 
+   function getAdditionalCritDamagePercent(line) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const match = text.match(/^크리티컬 데미지 \+(\d+)%$/);
+     if (!match) return null;
+     const value = parseInt(match[1], 10);
+     return isNaN(value) ? null : value;
+   }
+ 
+   function isAdditionalCooldownLine(line) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     return text === "스킬 재사용 대기시간 -1초";
+   }
+ 
+   function isAdditionalPerLevelStatLine(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const types = getAdditionalMainStatTypes(statType);
+     return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
+   }
+ 
+   function getAdditionalPerLevelStatValue(line, statType) {
+     const text = (line && line.optionText) ? line.optionText : "";
+     const types = getAdditionalMainStatTypes(statType);
+     for (const type of types) {
+       const match = text.match(new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+(\\d+)$`));
+       if (match) {
+         const value = parseInt(match[1], 10);
+         return isNaN(value) ? null : value;
+       }
+     }
+     return null;
+   }
+ 
++  function getAdditionalPerLevelStatValueAny(line) {
++    const text = (line && line.optionText) ? line.optionText : "";
++    const match = text.match(/^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+(\d+)$/);
++    if (!match) return null;
++    const value = parseInt(match[2], 10);
++    return isNaN(value) ? null : value;
++  }
++
++  function isAdditionalPerLevelStatLineAny(line) {
++    const text = (line && line.optionText) ? line.optionText : "";
++    return /^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+\d+$/.test(text);
++  }
++
+   function isAdditionalValidLine(line, statType) {
+     return (
+       isMainStatPercentLine(line, statType) ||
+       isAllStatPercentLine(line) ||
+       isMainStatFlatLine(line, statType) ||
+       isAdditionalAttackFlatLine(line, statType) ||
+       isAdditionalCritDamageLine(line) ||
+       isAdditionalCooldownLine(line) ||
+       isAdditionalPerLevelStatLine(line, statType)
      );
    }
  
@@ -28,11 +117,12 @@ index 33e3c767f66561d04241b30f814d569441c61609..b8f3f1363031c2a5560fcf819e34e9ec
      const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
      if (cooldownLines >= 2) return true;
      if (criteria.requireCooldown && cooldownLines < 1) return false;
-+    const perLevelPlusOneLines = countLines(
-+      candLines,
-+      line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1
-+    );
-+    if (perLevelPlusOneLines >= 2) return false;
+     const perLevelPlusOneLines = countLines(
+       candLines,
+-      line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1
++      line => getAdditionalPerLevelStatValueAny(line) === 1
+     );
+-    if (perLevelPlusOneLines >= 2) return false;
      const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
      const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
      const allStatCount = isAllStatSelection(criteria.statType)
@@ -58,3 +148,43 @@ index 33e3c767f66561d04241b30f814d569441c61609..b8f3f1363031c2a5560fcf819e34e9ec
        const firstLine = candLines[0];
        const secondLine = candLines[1];
        const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
+       const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
+       return firstIsMainPercent && secondIsMainPercent;
+     }
+ 
+     if (isThreeLine) {
+       if (strictValidCount < 3) return false;
+-      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1);
+-      const hasAttackFlat = candLines.some(line => isAdditionalAttackFlatLine(line, criteria.statType));
++      const perLevelLines = countLines(candLines, isAdditionalPerLevelStatLineAny);
++      if (perLevelLines >= 2) return false;
++      const attackFlatLines = countLines(candLines, isAdditionalAttackFlatLineAny);
++      if (attackFlatLines >= 2) return false;
++      if (perLevelPlusOneLines >= 2) return false;
++      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValueAny(line) === 1);
++      const hasAttackFlat = candLines.some(isAdditionalAttackFlatLineAny);
+       if (hasPerLevelPlusOne && hasAttackFlat) return false;
+       return true;
+     }
+ 
+     return false;
+   }
+ 
+   function isMainValidSet(candLines, context, criteria) {
+     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
+     const partsType = context.partsType;
+     const iedMaxN = criteria.iedMaxN;
+     const bossMaxM = criteria.bossMaxM;
+     const mainStat = getEffectiveMainStat();
+   
+     const iedCount = countLines(candLines, isIEDLine);
+   
+     // ✅ 변경: "정확히 N"이 아니라 "최대 N" (0~N 허용)
+     if (iedCount > iedMaxN) return false;
+   
+     if (partsType === PARTS.EMBLEM) {
+       // 엠블렘: Boss 없음 (혹시 데이터에 섞이면 무효 처리)
+       const bossCount = countLines(candLines, isBossLine);
+       if (bossCount > 0) return false;
+   
+       // IED가 아닌 줄은 전부 ATK/MATK% 이어야 함

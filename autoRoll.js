@@ -306,6 +306,11 @@
     return /^공격력 \+\d+$/.test(text);
   }
 
+  function isAdditionalAttackFlatLineAny(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    return /^(공격력|마력) \+\d+$/.test(text);
+  }
+
   function isAdditionalCritDamageLine(line) {
     const text = (line && line.optionText) ? line.optionText : "";
     return /^크리티컬 데미지 \+\d+%$/.test(text);
@@ -341,6 +346,19 @@
       }
     }
     return null;
+  }
+
+  function getAdditionalPerLevelStatValueAny(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    const match = text.match(/^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+(\d+)$/);
+    if (!match) return null;
+    const value = parseInt(match[2], 10);
+    return isNaN(value) ? null : value;
+  }
+
+  function isAdditionalPerLevelStatLineAny(line) {
+    const text = (line && line.optionText) ? line.optionText : "";
+    return /^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+\d+$/.test(text);
   }
 
   function isAdditionalValidLine(line, statType) {
@@ -379,9 +397,8 @@
     if (criteria.requireCooldown && cooldownLines < 1) return false;
     const perLevelPlusOneLines = countLines(
       candLines,
-      line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1
+      line => getAdditionalPerLevelStatValueAny(line) === 1
     );
-    if (perLevelPlusOneLines >= 2) return false;
     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
     const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
     const allStatCount = isAllStatSelection(criteria.statType)
@@ -413,8 +430,13 @@
 
     if (isThreeLine) {
       if (strictValidCount < 3) return false;
-      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1);
-      const hasAttackFlat = candLines.some(line => isAdditionalAttackFlatLine(line, criteria.statType));
+      const perLevelLines = countLines(candLines, isAdditionalPerLevelStatLineAny);
+      if (perLevelLines >= 2) return false;
+      const attackFlatLines = countLines(candLines, isAdditionalAttackFlatLineAny);
+      if (attackFlatLines >= 2) return false;
+      if (perLevelPlusOneLines >= 2) return false;
+      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValueAny(line) === 1);
+      const hasAttackFlat = candLines.some(isAdditionalAttackFlatLineAny);
       if (hasPerLevelPlusOne && hasAttackFlat) return false;
       return true;
     }
