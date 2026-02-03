@@ -1166,12 +1166,15 @@
 
     function normalizeNxEquipItems(raw, presetNo) {
       if (!raw) return [];
-      const list = raw.item_equipment || [];
+      const presetKey = presetNo ? `item_equipment_preset_${presetNo}` : null;
+      const presetList = presetKey ? raw[presetKey] : null;
+      const usePresetList = Array.isArray(presetList) && presetList.length > 0;
+      const list = usePresetList ? presetList : (raw.item_equipment || []);
       const out = [];
       list.forEach((it, idx) => {
         // preset: item_equipment_preset_no 값이 있는 경우만 필터
         const pno = it.item_equipment_preset_no;
-        if (presetNo && pno && String(pno) !== String(presetNo)) return;
+        if (!usePresetList && presetNo && pno && String(pno) !== String(presetNo)) return;
 
         const partName = it.item_equipment_part || "";
         const slotName = it.item_equipment_slot || "";
