@@ -121,6 +121,12 @@
       color:#111827;
       box-shadow:0 10px 25px rgba(140,175,11,0.45);
     }
+    .btn-no-glow {
+      box-shadow:none;
+    }
+    .btn-no-glow:active {
+      box-shadow:none;
+    }
     .btn-primary:active {
       transform:translateY(1px) scale(.99);
       box-shadow:0 4px 12px rgba(140,175,11,0.35);
@@ -375,6 +381,33 @@
     #card-log {
       width:100%;
     }
+
+    .cube-kind-option.disabled {
+      color:#6b7280;
+      opacity:0.55;
+    }
+
+    .main-stat-grid {
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:6px 12px;
+      margin-top:4px;
+    }
+
+    .auto-help {
+      margin:4px 0 6px;
+      font-size:0.8rem;
+      color:#a1a1aa;
+    }
+    .auto-help summary {
+      cursor:pointer;
+      list-style:none;
+      color:#cbd5f5;
+      font-weight:600;
+    }
+    .auto-help summary::marker {
+      display:none;
+    }
   </style>
     <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VZJQL22RBV"></script>
@@ -410,17 +443,19 @@
           <div id="myEquipPanel" style="display:none; margin-top:8px;">
             <div class="row">
               <div>
-                <label for="nxApiKey">Nexon Open API Key</label>
-                <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                <div class="api-button-row">
+                <div id="apiKeyInputWrap">
+                  <label for="nxApiKey">Nexon Open API Key</label>
+                  <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
+                </div>
+                <div class="api-button-row" id="apiKeyActions">
                   <button type="button" class="btn btn-secondary btn-compact btn-api" id="clearApiKeyBtn">저장된 키 삭제</button>
                 </div>
               </div>
-              <div>
+              <div id="myEquipNameArea">
                 <label for="characterName">캐릭터 닉네임</label>
                 <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                 <div class="api-button-row">
-                  <button type="button" class="btn btn-primary btn-compact btn-api" id="fetchMyEquipBtn">장비 불러오기</button>
+                  <button type="button" class="btn btn-primary btn-compact btn-api btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
                 </div>
                 <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
               </div>
@@ -504,13 +539,13 @@
       <div class="row">
         <div>
           <label>잠재능력 재설정 종류</label>
-          <label><input type="radio" name="cubeKind" value="black" checked />윗잠재 (블랙큐브)</label>
-          <label><input type="radio" name="cubeKind" value="meister" />명장의 큐브</label>
-          <label><input type="radio" name="cubeKind" value="addi" />아랫잠재 (에디셔널 큐브)</label>
+          <label class="cube-kind-option" data-cube-kind="black"><input type="radio" name="cubeKind" value="black" checked />윗잠재 (블랙큐브)</label>
+          <label class="cube-kind-option" data-cube-kind="meister"><input type="radio" name="cubeKind" value="meister" />명장의 큐브</label>
+          <label class="cube-kind-option" data-cube-kind="addi"><input type="radio" name="cubeKind" value="addi" />아랫잠재 (에디셔널 큐브)</label>
         </div>
         <div>
           <label>주스탯</label>
-          <div>
+          <div class="main-stat-grid">
             <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
             <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
             <label><input type="radio" name="mainStat" value="INT" />INT</label>
@@ -533,9 +568,10 @@
         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
         <div data-auto-kind="addi-weapon">
           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:4px;">
-            공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.
-          </div>
+          <details class="auto-help">
+            <summary>설명 보기</summary>
+            <div>공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.</div>
+          </details>
           <div style="display:flex; align-items:center; gap:8px;">
             <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
@@ -545,10 +581,13 @@
         <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
         <div data-auto-kind="addi-stat" style="margin-top:10px;">
           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-            유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
-            올스탯 선택 시 2줄은 올스탯 1줄 이상, 2.5줄/3줄은 올스탯 2줄 이상<br>
-          </div>
+          <details class="auto-help">
+            <summary>설명 보기</summary>
+            <div>
+              유효 옵션: 주스탯%/주스탯/공격력·마력/크뎀/쿨감(-1초)/9레벨당 주스탯<br>
+              올스탯 선택 시 2줄은 올스탯 1줄 이상, 2.5줄/3줄은 올스탯 2줄 이상
+            </div>
+          </details>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label for="additionalAutoLines" style="margin:0; font-size:0.85rem;">유효 옵션 줄 수</label>
             <select id="additionalAutoLines" style="max-width:110px;">
@@ -568,11 +607,14 @@
         <!-- 윗잠재 설정: IED/Boss/ATK(MATK) 유효 조합 -->
         <div data-auto-kind="main" style="margin-top:10px;">
           <label style="margin-bottom:4px;">무보엠류 자동 돌리기 (유효 옵션 조합)</label>
-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-            최대 조건을 넘지 않는 후보가 나오면 자동으로 멈춤 <br>
-            예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
-            예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
-          </div>
+          <details class="auto-help">
+            <summary>설명 보기</summary>
+            <div>
+              최대 조건을 넘지 않는 후보가 나오면 자동으로 멈춤 <br>
+              예시1: 방무를 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '공공방'<br>
+              예시2: 방무를 최대 0줄, 보공을 최대 1줄로 설정한다면, 유효 옵션은 '공공공', '보공공'
+            </div>
+          </details>
 
           <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -604,11 +646,14 @@
         <!-- 장신구/방어구 자동 돌리기: 주스탯% 합계 -->
         <div data-auto-kind="stat" style="margin-top:10px;">
           <label style="margin-bottom:4px;">장신구/방어구 자동 돌리기 (주스탯 %)</label>
-          <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
-            주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
-            "올스탯(제논 용)"은 STR/DEX/LUK을 각각 1/3 합산하며 올스탯%도 포함<br>
-            쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
-          </div>
+          <details class="auto-help">
+            <summary>설명 보기</summary>
+            <div>
+              주스탯이 목표 이상이면 멈춥니다. "아무거나"는 4개 주스탯 중 가장 큰 합을 사용<br>
+              "올스탯(제논 용)"은 STR/DEX/LUK을 각각 1/3 합산하며 올스탯%도 포함<br>
+              쿨감/크뎀/드메는 설정된 주스탯 목표에 상관 없이, 더 높으면 유효옵 판정
+            </div>
+          </details>
 
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <label for="armorAutoTarget" style="margin:0; font-size:0.85rem;">목표 주스탯 %</label>
@@ -766,12 +811,26 @@
       return String(name || "").trim();
     }
 
-    function resolvePartsType(partName, slotName, slotNo) {
+    function resolvePartsType(partName, slotName, slotNo, itemName) {
       const normalizedPart = normalizePartKey(partName);
+      const normalizedSlot = normalizePartKey(slotName);
+      const normalizedItem = normalizePartKey(itemName);
+
+      const isSubWeapon =
+        normalizedPart.includes("보조무기") || normalizedSlot.includes("보조무기");
+      if (isSubWeapon) {
+        if (normalizedItem.includes("소울링") || normalizedItem.includes("포스실드") || normalizedItem.includes("포스쉴드")) {
+          return PART_TO_PARTSTYPE["포스실드"];
+        }
+        if (normalizedItem.includes("방패")) {
+          return PART_TO_PARTSTYPE["방패"];
+        }
+        return PART_TO_PARTSTYPE["보조무기"];
+      }
+
       if (normalizedPart && PART_TO_PARTSTYPE[normalizedPart]) {
         return PART_TO_PARTSTYPE[normalizedPart];
       }
-      const normalizedSlot = normalizePartKey(slotName);
       if (normalizedSlot && PART_TO_PARTSTYPE[normalizedSlot]) {
         return PART_TO_PARTSTYPE[normalizedSlot];
       }
@@ -870,7 +929,7 @@
         const partName = it.item_equipment_part || "";
         const slotName = it.item_equipment_slot || "";
         const slotNo = it.item_equipment_slot_no ?? it.item_equipment_slot;
-        const partsType = resolvePartsType(partName, slotName, slotNo);
+        const partsType = resolvePartsType(partName, slotName, slotNo, it.item_name);
 
         const mainGrade = it.potential_option_grade ?? null;
         const addGrade  = it.additional_potential_option_grade ?? null;
@@ -906,7 +965,7 @@
       const main = getGradeInitial(e.mainGrade);
       const add = getGradeInitial(e.addGrade);
       const part = e.partName || "?";
-      return `[${part}] ${e.item_name} (${main}/${add})`;
+      return `[${part}] ${e.item_name} [${main}/${add}]`;
     }
 
     function renderMyEquipSelect() {
@@ -954,8 +1013,25 @@
 
       const partsLabel = equip.partName || "-";
       const lvLabel = equip.reqLev ? `Lv.${equip.reqLev}` : "-";
-      const info = `${partsLabel} / ${lvLabel} | 윗:${equip.mainGrade ?? "-"} / 아랫:${equip.addGrade ?? "-"}`;
+      const main = getGradeInitial(equip.mainGrade);
+      const add = getGradeInitial(equip.addGrade);
+      const info = `${partsLabel} / ${lvLabel} | [${main}/${add}]`;
       if (hint) hint.textContent = info;
+    }
+
+    function updateCubeKindAvailability(equip) {
+      const options = document.querySelectorAll(".cube-kind-option");
+      const mainOk = equip ? isSideLegendary(equip, "main") : true;
+      const addOk = equip ? isSideLegendary(equip, "addi") : true;
+
+      options.forEach(label => {
+        const kind = label.getAttribute("data-cube-kind");
+        if (!kind) return;
+        const radio = label.querySelector("input[type='radio']");
+        const shouldDisable = kind === "addi" ? !addOk : !mainOk;
+        if (radio) radio.disabled = shouldDisable;
+        label.classList.toggle("disabled", shouldDisable);
+      });
     }
 
     function normalizeStatText(text) {
@@ -1084,6 +1160,7 @@
 
       // 큐브 종류 유효성 보정
       ensureValidCubeKindForEquip(equip);
+      updateCubeKindAvailability(equip);
 
       // 현재 옵션을 "내 장비 잠재"로 덮어쓰기
       const cubeKind = getSelectedCubeKind();
@@ -1799,15 +1876,25 @@
       const toggle = document.getElementById("useMyEquipToggle");
       const panel = document.getElementById("myEquipPanel");
       const apiInput = document.getElementById("nxApiKey");
+      const apiInputWrap = document.getElementById("apiKeyInputWrap");
+      const apiActions = document.getElementById("apiKeyActions");
       const clearBtn = document.getElementById("clearApiKeyBtn");
       const nameInput = document.getElementById("characterName");
       const fetchBtn = document.getElementById("fetchMyEquipBtn");
       const presetSel = document.getElementById("equipPreset");
       const equipSel = document.getElementById("myEquipSelect");
+      const nameArea = document.getElementById("myEquipNameArea");
 
       // load saved api key
       const savedKey = localStorage.getItem(NX_API_STORAGE_KEY);
       if (savedKey && apiInput) apiInput.value = savedKey;
+
+      function updateApiKeyUI() {
+        const hasKey = Boolean((apiInput?.value || "").trim());
+        if (apiInputWrap) apiInputWrap.style.display = hasKey ? "none" : "block";
+        if (apiActions) apiActions.style.display = hasKey ? "flex" : "none";
+        if (nameArea) nameArea.style.display = hasKey ? "block" : "none";
+      }
 
       function setPanelVisible(v) {
         if (panel) panel.style.display = v ? "block" : "none";
@@ -1832,6 +1919,7 @@
             equipSel.disabled = true;
           }
           setMyEquipStatus("");
+          updateCubeKindAvailability(null);
           // 기존 동작으로 복귀: 현재 설정값 기반 재초기화
           initCurrentOption();
         }
@@ -1840,6 +1928,7 @@
       if (toggle) {
         toggle.addEventListener("change", () => {
           setMode(toggle.checked);
+          updateApiKeyUI();
         });
       }
 
@@ -1847,12 +1936,13 @@
         clearBtn.addEventListener("click", () => {
           localStorage.removeItem(NX_API_STORAGE_KEY);
           if (apiInput) apiInput.value = "";
+          updateApiKeyUI();
           setMyEquipStatus("저장된 키를 삭제했습니다.");
         });
       }
 
       async function doFetchEquip() {
-        const apiKey = (apiInput?.value || "").trim();
+        const apiKey = (apiInput?.value || localStorage.getItem(NX_API_STORAGE_KEY) || "").trim();
         const name = (nameInput?.value || "").trim();
         if (!apiKey) { alert("API Key를 입력하세요."); return; }
         if (!name) { alert("닉네임을 입력하세요."); return; }
@@ -1872,6 +1962,8 @@
 
           // 저장(성공 시)
           localStorage.setItem(NX_API_STORAGE_KEY, apiKey);
+          if (apiInput) apiInput.value = apiKey;
+          updateApiKeyUI();
 
           // preset 반영
           const presetNo = presetSel?.value || "1";
@@ -1904,6 +1996,17 @@
       }
 
       if (fetchBtn) fetchBtn.addEventListener("click", doFetchEquip);
+      if (apiInput) {
+        apiInput.addEventListener("change", () => {
+          const value = apiInput.value.trim();
+          if (value) {
+            localStorage.setItem(NX_API_STORAGE_KEY, value);
+          } else {
+            localStorage.removeItem(NX_API_STORAGE_KEY);
+          }
+          updateApiKeyUI();
+        });
+      }
 
       if (presetSel) {
         presetSel.addEventListener("change", () => {
@@ -1928,6 +2031,7 @@
 
           // 기본 side가 레전더리인지 확인 후 적용
           ensureValidCubeKindForEquip(eq);
+          updateCubeKindAvailability(eq);
           applyNxEquipToSimulator(eq);
           window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
         });
@@ -1935,6 +2039,7 @@
 
       // 초기 토글 상태
       setPanelVisible(false);
+      updateApiKeyUI();
     }
 
 const storedSettings = getStoredSettings();
