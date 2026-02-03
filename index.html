@@ -153,6 +153,40 @@
       align-items:center;
       margin-top:10px;
     }
+    .my-equip-toggle-row {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .my-equip-panel {
+      margin-top:8px;
+    }
+    .my-equip-step {
+      overflow:hidden;
+      max-height:0;
+      opacity:0;
+      transform:translateY(-4px);
+      transition:max-height 0.24s ease, opacity 0.2s ease, transform 0.2s ease;
+      pointer-events:none;
+    }
+    .my-equip-step.is-visible {
+      max-height:200px;
+      opacity:1;
+      transform:translateY(0);
+      pointer-events:auto;
+    }
+    .my-equip-fetch-row {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .my-equip-fetch-row input {
+      flex:1;
+      min-width:140px;
+      max-width:240px;
+    }
 
     .options-layout {
       margin-top:8px;
@@ -390,8 +424,18 @@
     .main-stat-grid {
       display:grid;
       grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:6px 12px;
-      margin-top:4px;
+      gap:2px 10px;
+      margin-top:2px;
+    }
+    .main-stat-grid label {
+      margin-bottom:0;
+      display:flex;
+      align-items:flex-start;
+      gap:6px;
+      line-height:1.2;
+    }
+    .main-stat-grid label span {
+      display:block;
     }
 
     .auto-help {
@@ -435,30 +479,26 @@
 
         <!-- 내 장비 불러오기 (Nexon Open API) -->
         <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #2d2d2d;">
-          <label style="margin-bottom:6px; font-size:0.9rem;">
-            <input type="checkbox" id="useMyEquipToggle" />
-            내 장비 불러오기 (API Key 필요)
-          </label>
+          <div class="my-equip-toggle-row">
+            <label style="margin-bottom:6px; font-size:0.9rem;">
+              <input type="checkbox" id="useMyEquipToggle" />
+              내 장비 불러오기 (API Key 필요)
+            </label>
+            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
+          </div>
 
-          <div id="myEquipPanel" style="display:none; margin-top:8px;">
-            <div class="row">
-              <div>
-                <div id="apiKeyInputWrap">
-                  <label for="nxApiKey">Nexon Open API Key</label>
-                  <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                </div>
-                <div class="api-button-row" id="apiKeyActions">
-                  <button type="button" class="btn btn-secondary btn-compact btn-api" id="clearApiKeyBtn">저장된 키 삭제</button>
-                </div>
-              </div>
-              <div id="myEquipNameArea">
-                <label for="characterName">캐릭터 닉네임</label>
+          <div id="myEquipPanel" class="my-equip-panel" style="display:none;">
+            <div id="apiKeyInputWrap" class="my-equip-step">
+              <label for="nxApiKey">Nexon Open API Key</label>
+              <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
+            </div>
+            <div id="myEquipNameArea" class="my-equip-step">
+              <label for="characterName">캐릭터 닉네임</label>
+              <div class="my-equip-fetch-row">
                 <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                <div class="api-button-row">
-                  <button type="button" class="btn btn-primary btn-compact btn-api btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
-                </div>
-                <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
+                <button type="button" class="btn btn-primary btn-compact btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
               </div>
+              <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
             </div>
 
             <div class="row" style="margin-top:6px;">
@@ -546,12 +586,12 @@
         <div>
           <label>주스탯</label>
           <div class="main-stat-grid">
-            <label><input type="radio" name="mainStat" value="STR" checked />STR</label>
-            <label><input type="radio" name="mainStat" value="DEX" />DEX</label>
-            <label><input type="radio" name="mainStat" value="INT" />INT</label>
-            <label><input type="radio" name="mainStat" value="LUK" />LUK</label>
-            <label><input type="radio" name="mainStat" value="ALLSTAT" />올스탯 (제논 용)</label>
-            <label><input type="radio" name="mainStat" value="ANY" />아무거나 (대장장이 용)</label>
+            <label><input type="radio" name="mainStat" value="STR" checked /><span>STR</span></label>
+            <label><input type="radio" name="mainStat" value="DEX" /><span>DEX</span></label>
+            <label><input type="radio" name="mainStat" value="INT" /><span>INT</span></label>
+            <label><input type="radio" name="mainStat" value="LUK" /><span>LUK</span></label>
+            <label><input type="radio" name="mainStat" value="ALLSTAT" /><span>올스탯 (제논 용)</span></label>
+            <label><input type="radio" name="mainStat" value="ANY" /><span>아무거나 (대장장이 용)</span></label>
           </div>
         </div>
       </div>
@@ -1877,7 +1917,6 @@
       const panel = document.getElementById("myEquipPanel");
       const apiInput = document.getElementById("nxApiKey");
       const apiInputWrap = document.getElementById("apiKeyInputWrap");
-      const apiActions = document.getElementById("apiKeyActions");
       const clearBtn = document.getElementById("clearApiKeyBtn");
       const nameInput = document.getElementById("characterName");
       const fetchBtn = document.getElementById("fetchMyEquipBtn");
@@ -1891,9 +1930,9 @@
 
       function updateApiKeyUI() {
         const hasKey = Boolean((apiInput?.value || "").trim());
-        if (apiInputWrap) apiInputWrap.style.display = hasKey ? "none" : "block";
-        if (apiActions) apiActions.style.display = hasKey ? "flex" : "none";
-        if (nameArea) nameArea.style.display = hasKey ? "block" : "none";
+        if (apiInputWrap) apiInputWrap.classList.toggle("is-visible", !hasKey);
+        if (nameArea) nameArea.classList.toggle("is-visible", hasKey);
+        if (clearBtn) clearBtn.style.display = hasKey ? "inline-flex" : "none";
       }
 
       function setPanelVisible(v) {
@@ -2125,6 +2164,9 @@ const storedSettings = getStoredSettings();
         <div style="color:#e5e7eb; font-weight:600;">2025-11-27</div>
         <div>- 3번 돌리기 기능만 탑재하여 github 업로드</div>
       </div>
+    </div>
+    <div style="margin-top:10px; color:#6b7280; font-size:0.7rem;">
+      Data based on NEXON Open API
     </div>
   </footer>  
 </body>
