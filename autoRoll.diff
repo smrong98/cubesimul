@@ -1,190 +1,208 @@
 diff --git a/autoRoll.js b/autoRoll.js
-index b8f3f1363031c2a5560fcf819e34e9ecf6ec75ce..8834644f8b668930b9eb7cd34ef2298bc3ec7037 100644
+index 8834644f8b668930b9eb7cd34ef2298bc3ec7037..3ea5f24e9a6ad542b582ec2bdea0798f58e8d77f 100644
 --- a/autoRoll.js
 +++ b/autoRoll.js
-@@ -284,159 +284,181 @@
- 
-   function isMainStatPercentLine(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const types = getAdditionalMainStatTypes(statType);
-     if (statType === "ALLSTAT" && isAllStatPercentLine(line)) return true;
-     return types.some(type => new RegExp(`^${type} \\+\\d+%$`).test(text));
-   }
- 
-   function isMainStatFlatLine(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const types = getAdditionalMainStatTypes(statType);
-     return types.some(type => new RegExp(`^${type} \\+\\d+$`).test(text));
-   }
- 
-   function isAdditionalAttackFlatLine(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     if (statType === "INT") {
-       return /^마력 \+\d+$/.test(text);
-     }
-     if (statType === "ANY") {
-       return /^(공격력|마력) \+\d+$/.test(text);
-     }
-     return /^공격력 \+\d+$/.test(text);
-   }
- 
-+  function isAdditionalAttackFlatLineAny(line) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    return /^(공격력|마력) \+\d+$/.test(text);
-+  }
-+
-   function isAdditionalCritDamageLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return /^크리티컬 데미지 \+\d+%$/.test(text);
-   }
- 
-   function getAdditionalCritDamagePercent(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const match = text.match(/^크리티컬 데미지 \+(\d+)%$/);
-     if (!match) return null;
-     const value = parseInt(match[1], 10);
-     return isNaN(value) ? null : value;
-   }
- 
-   function isAdditionalCooldownLine(line) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     return text === "스킬 재사용 대기시간 -1초";
-   }
- 
-   function isAdditionalPerLevelStatLine(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const types = getAdditionalMainStatTypes(statType);
-     return types.some(type => new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+\\d+$`).test(text));
-   }
- 
-   function getAdditionalPerLevelStatValue(line, statType) {
-     const text = (line && line.optionText) ? line.optionText : "";
-     const types = getAdditionalMainStatTypes(statType);
-     for (const type of types) {
-       const match = text.match(new RegExp(`^캐릭터 기준 9레벨 당 ${type} \\+(\\d+)$`));
-       if (match) {
-         const value = parseInt(match[1], 10);
-         return isNaN(value) ? null : value;
+@@ -585,52 +585,53 @@
+       if (predicate(cand)) {
+         const el = document.getElementById(ids[i]);
+         if (!el) continue;
+   
+         el.classList.add("auto-hit");
+         el.classList.add("auto-hit-flash");
+   
+         // flash는 끝나면 제거, hit는 유지
+         el.addEventListener("animationend", () => {
+           el.classList.remove("auto-hit-flash");
+         }, { once: true });
        }
      }
-     return null;
    }
  
-+  function getAdditionalPerLevelStatValueAny(line) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    const match = text.match(/^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+(\d+)$/);
-+    if (!match) return null;
-+    const value = parseInt(match[2], 10);
-+    return isNaN(value) ? null : value;
-+  }
+   
+   
+ 
+   function updateAutoButton(running) {
+     const btn = document.getElementById("autoRollBtn");
+     if (!btn) return;
+     btn.textContent = running ? "자동 돌리기 정지" : "자동 돌리기 시작";
+ 
+     // 지원 부위가 아니면 시작 불가 (진행 중일 때는 정지 가능)
+     const supported = isSupportedParts();
+-    btn.disabled = !supported && !running;
+-    btn.style.opacity = (!supported && !running) ? 0.5 : 1;
++    const pendingEquip = typeof isMyEquipPendingSelection === "function" && isMyEquipPendingSelection();
++    btn.disabled = pendingEquip || (!supported && !running);
++    btn.style.opacity = (pendingEquip || (!supported && !running)) ? 0.5 : 1;
+   }
+ 
+   function updateBossMaxOptions() {
+     const bossMaxSelect = document.getElementById("autoMainBossMin");
+     const iedSelect = document.getElementById("autoMainIED");
+     if (!bossMaxSelect || !iedSelect) return;
+ 
+     const iedN = Number(iedSelect.value);
+     const maxBoss = Math.max(0, 3 - iedN);
+ 
+     // 옵션 재구성 (기존 선택 값 유지 시도)
+     const prev = Number(bossMaxSelect.value);
+     bossMaxSelect.innerHTML = "";
+     for (let i = 0; i <= maxBoss; i++) {
+       const opt = document.createElement("option");
+       opt.value = String(i);
+       opt.textContent = String(i);
+       bossMaxSelect.appendChild(opt);
+     }
+     bossMaxSelect.value = String(Math.min(prev || 0, maxBoss));
+   }
+ 
+   function setAutoKindVisibility() {
+     const container = document.getElementById("weaponAutoContainer");
+     if (!container) return;
+@@ -661,57 +662,62 @@
+     anyRadio.disabled = isWeapon;
+     if (isWeapon && anyRadio.checked) {
+       const fallback = document.querySelector('input[name="mainStat"][value="STR"]');
+       if (fallback) fallback.checked = true;
+     }
+   }
+ 
+   function updateSpecialOptionVisibility() {
+     const partsType = getSelectedPartsTypeSafe();
+     const cooldownRow = document.getElementById("armorCooldownRow");
+     const critRow = document.getElementById("armorCritRow");
+     const dropRow = document.getElementById("accessoryDropRow");
+     const addiCooldownRow = document.getElementById("additionalCooldownRow");
+ 
+     if (cooldownRow) cooldownRow.style.display = partsType === PARTS.HAT ? "flex" : "none";
+     if (critRow) critRow.style.display = partsType === PARTS.GLOVE ? "flex" : "none";
+     if (dropRow) dropRow.style.display = isAccessoryPartsType(partsType) ? "flex" : "none";
+     if (addiCooldownRow) {
+       addiCooldownRow.style.display = isAdditionalCubeSelected() && partsType === PARTS.HAT ? "flex" : "none";
+     }
+   }
+ 
+   function refreshAutoPanelVisibility() {
+     const container = document.getElementById("weaponAutoContainer");
+     const supported = isSupportedParts();
++    const pendingEquip = typeof isMyEquipPendingSelection === "function" && isMyEquipPendingSelection();
+ 
+     if (container) {
+-      container.style.display = supported ? "block" : "none";
++      container.style.display = !pendingEquip && supported ? "block" : "none";
+     }
+-    if (!supported) {
++    if (!supported || pendingEquip) {
+       stopAuto();
+     }
++    if (pendingEquip) {
++      updateAutoButton(false);
++      return;
++    }
+ 
+     // Boss UI: 무기/보조무기에서만 노출
+     const bossRow = document.getElementById("autoMainBossRow");
+     if (bossRow) {
+       bossRow.style.display = isWeaponOrSecondarySelected() ? "flex" : "none";
+     }
+ 
+     updateBossMaxOptions();
+     setAutoKindVisibility();
+     updateSpecialOptionVisibility();
+     updateMainStatAvailability();
+     updateAutoButton(autoRunning);
+   }
+ 
+   function autoStep(payload) {
+     if (!autoRunning) return;
+ 
+     if (!isSupportedParts()) {
+       stopAuto();
+       return;
+     }
+ 
+     // 한 번 세트 롤
+     if (typeof doOneRollStep === "function") {
+       doOneRollStep();
+@@ -930,72 +936,82 @@
+   // DOM 준비 후 이벤트 연결
+   window.addEventListener("DOMContentLoaded", () => {
+     const autoBtn = document.getElementById("autoRollBtn");
+     if (autoBtn) {
+       autoBtn.addEventListener("click", () => {
+         if (autoRunning) {
+           stopAuto();
+         } else {
+           startAuto();
+         }
+       });
+       // 적용 및 리셋 클릭 시 하이라이트 제거
+       const applyResetBtn = document.getElementById("applyResetBtn");
+       if (applyResetBtn) {
+         applyResetBtn.addEventListener("click", () => {
+           clearAutoHitUI();
+         });
+       }
+ 
+       const autoResetBtn = document.getElementById("autoResetBtn");
+       if (autoResetBtn) {
+         autoResetBtn.addEventListener("click", () => {
+           clearAutoHitUI();
+         });
+       }
++      const conditionResetBtn = document.getElementById("conditionResetBtn");
++      if (conditionResetBtn) {
++        conditionResetBtn.addEventListener("click", () => {
++          clearAutoHitUI();
++        });
++      }
+ 
+       // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
+       document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+         r.addEventListener("change", () => {
+           clearAutoHitUI();
+         });
+       });
+ 
+       // 부위 변경 시에도 남아있으면 혼동되므로 제거(권장)
+       const partsSelect2 = document.getElementById("partsType");
+       if (partsSelect2) {
+         partsSelect2.addEventListener("change", () => {
+           clearAutoHitUI();
+         });
+       }
+     }
+ 
+     const partsSelect = document.getElementById("partsType");
+     if (partsSelect) {
+       partsSelect.addEventListener("change", refreshAutoPanelVisibility);
+     }
+ 
+     // cubeKind 변경 시 (윗/에디) UI 토글
+     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
+       r.addEventListener("change", () => {
+         refreshAutoPanelVisibility();
+       });
+     });
+ 
+     // IED 변경 시 boss dropdown 범위 갱신
+     const iedSelect = document.getElementById("autoMainIED");
+     if (iedSelect) {
+       iedSelect.addEventListener("change", () => {
+         updateBossMaxOptions();
+         refreshAutoPanelVisibility();
+       });
+     }
+     
+ 
+     // 초기 boss dropdown 구성
+     updateBossMaxOptions();
+ 
+     // 초기 상태 세팅
+     refreshAutoPanelVisibility();
+   });
+ 
++  window.addEventListener("cubeSim:refreshAutoPanel", () => {
++    refreshAutoPanelVisibility();
++  });
 +
-+  function isAdditionalPerLevelStatLineAny(line) {
-+    const text = (line && line.optionText) ? line.optionText : "";
-+    return /^캐릭터 기준 9레벨 당 (STR|DEX|INT|LUK) \+\d+$/.test(text);
-+  }
-+
-   function isAdditionalValidLine(line, statType) {
-     return (
-       isMainStatPercentLine(line, statType) ||
-       isAllStatPercentLine(line) ||
-       isMainStatFlatLine(line, statType) ||
-       isAdditionalAttackFlatLine(line, statType) ||
-       isAdditionalCritDamageLine(line) ||
-       isAdditionalCooldownLine(line) ||
-       isAdditionalPerLevelStatLine(line, statType)
-     );
-   }
- 
-   function isAdditionalValidLineStrict(line, statType) {
-     const critValue = getAdditionalCritDamagePercent(line);
-     const critAllowed = critValue !== null && critValue !== 1;
-     return (
-       isMainStatPercentLine(line, statType) ||
-       isAllStatPercentLine(line) ||
-       isAdditionalAttackFlatLine(line, statType) ||
-       critAllowed ||
-       isAdditionalCooldownLine(line) ||
-       isAdditionalPerLevelStatLine(line, statType)
-     );
-   }
- 
-   function isAllStatSelection(statType) {
-     return statType === "ALLSTAT";
-   }
- 
-   function isAdditionalStatValidSet(candLines, criteria) {
-     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-     const cooldownLines = countLines(candLines, isAdditionalCooldownLine);
-     if (cooldownLines >= 2) return true;
-     if (criteria.requireCooldown && cooldownLines < 1) return false;
-     const perLevelPlusOneLines = countLines(
-       candLines,
--      line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1
-+      line => getAdditionalPerLevelStatValueAny(line) === 1
-     );
--    if (perLevelPlusOneLines >= 2) return false;
-     const validCount = countLines(candLines, line => isAdditionalValidLine(line, criteria.statType));
-     const strictValidCount = countLines(candLines, line => isAdditionalValidLineStrict(line, criteria.statType));
-     const allStatCount = isAllStatSelection(criteria.statType)
-       ? countLines(candLines, isAllStatPercentLine)
-       : 0;
-     const requiredLines = criteria.requiredLines;
-     const isTwoLine = requiredLines === 2;
-     const isTwoHalfLine = requiredLines === 2.5;
-     const isThreeLine = requiredLines === 3;
- 
-     if (isAllStatSelection(criteria.statType)) {
-       if (isTwoLine && allStatCount < 1) return false;
-       if ((isTwoHalfLine || isThreeLine) && allStatCount < 2) return false;
-     }
- 
-     if (isTwoLine) {
-       return validCount >= 2;
-     }
- 
-     if (isTwoHalfLine) {
-       if (validCount >= 3) return true;
- 
-       const firstLine = candLines[0];
-       const secondLine = candLines[1];
-       const firstIsMainPercent = isMainStatPercentLine(firstLine, criteria.statType);
-       const secondIsMainPercent = isMainStatPercentLine(secondLine, criteria.statType) || isAllStatPercentLine(secondLine);
-       return firstIsMainPercent && secondIsMainPercent;
-     }
- 
-     if (isThreeLine) {
-       if (strictValidCount < 3) return false;
--      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValue(line, criteria.statType) === 1);
--      const hasAttackFlat = candLines.some(line => isAdditionalAttackFlatLine(line, criteria.statType));
-+      const perLevelLines = countLines(candLines, isAdditionalPerLevelStatLineAny);
-+      if (perLevelLines >= 2) return false;
-+      const attackFlatLines = countLines(candLines, isAdditionalAttackFlatLineAny);
-+      if (attackFlatLines >= 2) return false;
-+      if (perLevelPlusOneLines >= 2) return false;
-+      const hasPerLevelPlusOne = candLines.some(line => getAdditionalPerLevelStatValueAny(line) === 1);
-+      const hasAttackFlat = candLines.some(isAdditionalAttackFlatLineAny);
-       if (hasPerLevelPlusOne && hasAttackFlat) return false;
-       return true;
-     }
- 
-     return false;
-   }
- 
-   function isMainValidSet(candLines, context, criteria) {
-     if (!Array.isArray(candLines) || candLines.length !== 3) return false;
-     const partsType = context.partsType;
-     const iedMaxN = criteria.iedMaxN;
-     const bossMaxM = criteria.bossMaxM;
-     const mainStat = getEffectiveMainStat();
-   
-     const iedCount = countLines(candLines, isIEDLine);
-   
-     // ✅ 변경: "정확히 N"이 아니라 "최대 N" (0~N 허용)
-     if (iedCount > iedMaxN) return false;
-   
-     if (partsType === PARTS.EMBLEM) {
-       // 엠블렘: Boss 없음 (혹시 데이터에 섞이면 무효 처리)
-       const bossCount = countLines(candLines, isBossLine);
-       if (bossCount > 0) return false;
-   
-       // IED가 아닌 줄은 전부 ATK/MATK% 이어야 함
+ })();

@@ -607,8 +607,9 @@
 
     // 지원 부위가 아니면 시작 불가 (진행 중일 때는 정지 가능)
     const supported = isSupportedParts();
-    btn.disabled = !supported && !running;
-    btn.style.opacity = (!supported && !running) ? 0.5 : 1;
+    const pendingEquip = typeof isMyEquipPendingSelection === "function" && isMyEquipPendingSelection();
+    btn.disabled = pendingEquip || (!supported && !running);
+    btn.style.opacity = (pendingEquip || (!supported && !running)) ? 0.5 : 1;
   }
 
   function updateBossMaxOptions() {
@@ -683,12 +684,17 @@
   function refreshAutoPanelVisibility() {
     const container = document.getElementById("weaponAutoContainer");
     const supported = isSupportedParts();
+    const pendingEquip = typeof isMyEquipPendingSelection === "function" && isMyEquipPendingSelection();
 
     if (container) {
-      container.style.display = supported ? "block" : "none";
+      container.style.display = !pendingEquip && supported ? "block" : "none";
     }
-    if (!supported) {
+    if (!supported || pendingEquip) {
       stopAuto();
+    }
+    if (pendingEquip) {
+      updateAutoButton(false);
+      return;
     }
 
     // Boss UI: 무기/보조무기에서만 노출
@@ -952,6 +958,12 @@
           clearAutoHitUI();
         });
       }
+      const conditionResetBtn = document.getElementById("conditionResetBtn");
+      if (conditionResetBtn) {
+        conditionResetBtn.addEventListener("click", () => {
+          clearAutoHitUI();
+        });
+      }
 
       // 큐브 종류 변경 시 하이라이트 제거 (이미 refreshAutoPanelVisibility를 걸어둔 곳에 같이 넣어도 됨)
       document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
@@ -995,6 +1007,10 @@
     updateBossMaxOptions();
 
     // 초기 상태 세팅
+    refreshAutoPanelVisibility();
+  });
+
+  window.addEventListener("cubeSim:refreshAutoPanel", () => {
     refreshAutoPanelVisibility();
   });
 

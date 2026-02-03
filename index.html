@@ -141,6 +141,12 @@
     .btn-api {
       flex:1;
     }
+    .api-button-row {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:10px;
+    }
 
     .options-layout {
       margin-top:8px;
@@ -406,14 +412,14 @@
               <div>
                 <label for="nxApiKey">Nexon Open API Key</label>
                 <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                <div class="api-button-row">
                   <button type="button" class="btn btn-secondary btn-compact btn-api" id="clearApiKeyBtn">저장된 키 삭제</button>
                 </div>
               </div>
               <div>
                 <label for="characterName">캐릭터 닉네임</label>
                 <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                <div style="display:flex; gap:8px; margin-top:10px;">
+                <div class="api-button-row">
                   <button type="button" class="btn btn-primary btn-compact btn-api" id="fetchMyEquipBtn">장비 불러오기</button>
                 </div>
                 <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
@@ -646,6 +652,7 @@
 
       <div style="margin-top:10px; display:flex; gap:8px;">
         <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">조건 적용</button>
+        <button class="btn btn-secondary" id="conditionResetBtn" style="flex:1;">조건 초기화</button>
       </div>
       </section>
 
@@ -1075,6 +1082,45 @@
       updateCubeTag();
       updateStatsTags();
       renderAllBoxes();
+    }
+
+    function resetAutoConditionDefaults({ save = true } = {}) {
+      const weaponAutoTarget = document.getElementById("weaponAutoTarget");
+      if (weaponAutoTarget) weaponAutoTarget.value = "21";
+
+      const additionalAutoLines = document.getElementById("additionalAutoLines");
+      if (additionalAutoLines) additionalAutoLines.value = "2";
+
+      const additionalCooldownRequired = document.getElementById("additionalCooldownRequired");
+      if (additionalCooldownRequired) additionalCooldownRequired.checked = false;
+
+      const autoMainIED = document.getElementById("autoMainIED");
+      if (autoMainIED) autoMainIED.value = "0";
+
+      const autoMainBossMin = document.getElementById("autoMainBossMin");
+      if (autoMainBossMin) autoMainBossMin.value = "0";
+
+      const autoMainSeekDeparture = document.getElementById("autoMainSeekDeparture");
+      if (autoMainSeekDeparture) autoMainSeekDeparture.checked = false;
+
+      const armorAutoTarget = document.getElementById("armorAutoTarget");
+      if (armorAutoTarget) armorAutoTarget.value = "0";
+
+      const armorCooldownMin = document.getElementById("armorCooldownMin");
+      if (armorCooldownMin) armorCooldownMin.value = "0";
+
+      const armorCritMin = document.getElementById("armorCritMin");
+      if (armorCritMin) armorCritMin.value = "0";
+
+      const accessoryDropMin = document.getElementById("accessoryDropMin");
+      if (accessoryDropMin) accessoryDropMin.value = "0";
+
+      window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
+      if (save) saveCurrentSettings();
+    }
+
+    function isMyEquipPendingSelection() {
+      return useMyEquip && !selectedEquipKey;
     }
 
     let bcProbs = [];
@@ -1617,6 +1663,11 @@
       meisterUsed = 0;
       mesoUsed = 0;
       rollCount = 0;
+      const eq = useMyEquip ? getSelectedNxEquip() : null;
+      if (eq) {
+        applyNxEquipToSimulator(eq);
+        return;
+      }
       initCurrentOption();
     }
 
@@ -1637,6 +1688,9 @@
     }
 
     document.getElementById("applyResetBtn").addEventListener("click", handleApplyConditions);
+    document.getElementById("conditionResetBtn").addEventListener("click", () => {
+      resetAutoConditionDefaults();
+    });
     document.getElementById("autoResetBtn").addEventListener("click", handleReset);
 
 
@@ -1739,6 +1793,7 @@
       function setMode(v) {
         useMyEquip = v;
         setPanelVisible(v);
+        window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
         if (!v) {
           // release lock and reset UI
           setControlsDisabledByMyEquipMode(false);
@@ -1748,6 +1803,7 @@
           const auto = document.getElementById("myEquipAutoPartLevel");
           if (auto) auto.textContent = "-";
           updateMyEquipSideUI(null);
+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
           if (equipSel) {
             equipSel.innerHTML = "<option value=''> (먼저 장비를 불러오세요) </option>";
             equipSel.disabled = true;
@@ -1804,6 +1860,7 @@
           }
 
           renderMyEquipSelect();
+          resetAutoConditionDefaults();
           setMyEquipStatus(`불러오기 완료: ${nxEquipItems.length}개 장비`);
 
           const detectedStat = detectMainStatFromEquipList(nxEquipItems, getSelectedCubeKind());
@@ -1811,6 +1868,7 @@
 
           // my mode에서 레벨/부위 선택 잠그기(아이템 선택 후)
           setControlsDisabledByMyEquipMode(true);
+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
 
           // 프리셋 변경 시 아이템 재구성
         } catch (err) {
@@ -1833,6 +1891,7 @@
           selectedEquipKey = "";
           renderMyEquipSelect();
           updateMyEquipSideUI(null);
+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
         });
       }
 
@@ -1847,6 +1906,7 @@
           // 기본 side가 레전더리인지 확인 후 적용
           ensureValidCubeKindForEquip(eq);
           applyNxEquipToSimulator(eq);
+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
         });
       }
 
