@@ -763,6 +763,28 @@
       "기계심장": 20
     };
 
+    function normalizePartKey(name) {
+      return String(name || "").trim();
+    }
+
+    function resolvePartsType(partName, slotName, slotNo) {
+      const normalizedPart = normalizePartKey(partName);
+      if (normalizedPart && PART_TO_PARTSTYPE[normalizedPart]) {
+        return PART_TO_PARTSTYPE[normalizedPart];
+      }
+      const normalizedSlot = normalizePartKey(slotName);
+      if (normalizedSlot && PART_TO_PARTSTYPE[normalizedSlot]) {
+        return PART_TO_PARTSTYPE[normalizedSlot];
+      }
+
+      const slotNumeric = Number(slotNo ?? normalizedSlot);
+      if (Number.isFinite(slotNumeric) && slotNumeric >= 1 && slotNumeric <= 20) {
+        return slotNumeric;
+      }
+
+      return null;
+    }
+
     function isLegendary(grade) {
       return grade === "레전드리";
     }
@@ -847,7 +869,9 @@
         if (presetNo && pno && String(pno) !== String(presetNo)) return;
 
         const partName = it.item_equipment_part || "";
-        const partsType = PART_TO_PARTSTYPE[partName] ?? null;
+        const slotName = it.item_equipment_slot || "";
+        const slotNo = it.item_equipment_slot_no ?? it.item_equipment_slot;
+        const partsType = resolvePartsType(partName, slotName, slotNo);
 
         const mainGrade = it.potential_option_grade ?? null;
         const addGrade  = it.additional_potential_option_grade ?? null;

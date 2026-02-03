@@ -1,503 +1,132 @@
 diff --git a/index.html b/index.html
-index fcffa532f8c89cdfe83f005ff5619f74b745e096..80ad1dfd30df8d49f6cc3f86fba7e5c4f9e2980b 100644
+index 80ad1dfd30df8d49f6cc3f86fba7e5c4f9e2980b..e989d8b5891931f7df1b216ce13fafafa3733593 100644
 --- a/index.html
 +++ b/index.html
-@@ -119,50 +119,56 @@
-     .btn-primary {
-       background:linear-gradient(135deg,#8CAF0B,#a9d51a);
-       color:#111827;
-       box-shadow:0 10px 25px rgba(140,175,11,0.45);
-     }
-     .btn-primary:active {
-       transform:translateY(1px) scale(.99);
-       box-shadow:0 4px 12px rgba(140,175,11,0.35);
-     }
-     .btn-secondary {
-       background:#27272a;
-       color:#e5e7eb;
-       border:1px solid #3f3f46;
-     }
-     .btn-secondary:active {
-       transform:translateY(1px) scale(.99);
-       box-shadow:0 4px 12px rgba(0,0,0,0.7);
-     }
-     .btn-compact {
-       padding:6px 10px;
-       font-size:0.8rem;
-     }
-     .btn-api {
-       flex:1;
-     }
-+    .api-button-row {
-+      display:flex;
-+      gap:8px;
-+      align-items:center;
-+      margin-top:10px;
-+    }
+@@ -741,50 +741,72 @@
  
-     .options-layout {
-       margin-top:8px;
-       display:grid;
-       grid-template-columns:repeat(3, minmax(0,1fr));
-       grid-auto-rows:auto;
-       gap:8px;
-       align-items:start;
-     }
-     #box-current {
-       grid-column:2 / 3;
-       grid-row:1;
-     }
-     #box-roll1 {
-       grid-column:1 / 2;
-       grid-row:2;
-     }
-     #box-roll2 {
-       grid-column:2 / 3;
-       grid-row:2;
-     }
-     #box-roll3 {
-       grid-column:3 / 4;
-       grid-row:2;
-     }
-@@ -384,58 +390,58 @@
-   <h1>잠재능력 재설정 시뮬레이터</h1>
-   <div class="subtitle">큐브 시뮬레이터</div>
-   <div class="page-meta">
-     <span id="updateDate"></span>
-     <span>/ 제작: 크로아 - 윈메롱</span>
-   </div>
+     const PART_TO_PARTSTYPE = {
+       "무기": 1,
+       "엠블렘": 2,
+       "보조무기": 3,
+       "포스실드": 4,
+       "소울링": 4,
+       "방패": 5,
+       "모자": 6,
+       "상의": 7,
+       "한벌옷": 8,
+       "하의": 9,
+       "신발": 10,
+       "장갑": 11,
+       "망토": 12,
+       "벨트": 13,
+       "어깨장식": 14,
+       "얼굴장식": 15,
+       "눈장식": 16,
+       "귀고리": 17,
+       "반지": 18,
+       "펜던트": 19,
+       "기계심장": 20
+     };
  
-   <div class="layout">
-     <div class="layout-column">
-       <!-- 1. 설정 카드 -->
-       <section class="card" id="card-settings">
-         <h2>설정</h2>
- 
-         <!-- 내 장비 불러오기 (Nexon Open API) -->
-         <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #2d2d2d;">
-           <label style="margin-bottom:6px; font-size:0.9rem;">
-             <input type="checkbox" id="useMyEquipToggle" />
-             내 장비 불러오기 (API Key 필요)
-           </label>
- 
-           <div id="myEquipPanel" style="display:none; margin-top:8px;">
-             <div class="row">
-               <div>
-                 <label for="nxApiKey">Nexon Open API Key</label>
-                 <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
--                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-+                <div class="api-button-row">
-                   <button type="button" class="btn btn-secondary btn-compact btn-api" id="clearApiKeyBtn">저장된 키 삭제</button>
-                 </div>
-               </div>
-               <div>
-                 <label for="characterName">캐릭터 닉네임</label>
-                 <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
--                <div style="display:flex; gap:8px; margin-top:10px;">
-+                <div class="api-button-row">
-                   <button type="button" class="btn btn-primary btn-compact btn-api" id="fetchMyEquipBtn">장비 불러오기</button>
-                 </div>
-                 <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
-               </div>
-             </div>
- 
-             <div class="row" style="margin-top:6px;">
-               <div>
-                 <label for="equipPreset">프리셋</label>
-                 <select id="equipPreset">
-                   <option value="1" selected>프리셋 1</option>
-                   <option value="2">프리셋 2</option>
-                   <option value="3">프리셋 3</option>
-                 </select>
-               </div>
-               <div>
-                 <label for="myEquipSelect">장비 선택 (레전만 가능)</label>
-                 <select id="myEquipSelect" disabled>
-                   <option value="">(먼저 장비를 불러오세요)</option>
-                 </select>
-               </div>
-             </div>
- 
-             <div class="row" style="margin-top:6px;">
-               <div>
-@@ -624,50 +630,51 @@
-           </div>
- 
-           <div id="armorCritRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-             <label for="armorCritMin" style="margin:0; font-size:0.85rem;">목표 최소 크뎀 줄 수</label>
-             <select id="armorCritMin" style="max-width:110px;">
-               <option value="0">없음</option>
-               <option value="1">크</option>
-               <option value="2">크크</option>
-               <option value="3">크크크</option>
-             </select>
-           </div>
- 
-           <div id="accessoryDropRow" style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
-             <label for="accessoryDropMin" style="margin:0; font-size:0.85rem;">목표 드메 줄 수</label>
-             <select id="accessoryDropMin" style="max-width:110px;">
-               <option value="0">0줄</option>
-               <option value="1">1줄</option>
-               <option value="2">2줄</option>
-             </select>
-           </div>
-         </div>
-       </div>
- 
-       <div style="margin-top:10px; display:flex; gap:8px;">
-         <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">조건 적용</button>
-+        <button class="btn btn-secondary" id="conditionResetBtn" style="flex:1;">조건 초기화</button>
-       </div>
-       </section>
- 
-       <!-- 4. 로그 (토글 가능) -->
-       <section class="card" id="card-log">
-         <h2>
-           <div class="log-header-row">
-             <span>로그 (최근 100회)</span>
-             <button type="button" id="toggleLogBtn" class="log-toggle-btn">펼치기</button>
-           </div>
-         </h2>
-         <div id="log" style="display:none;"></div>
-       </section>
-     </div>
- 
-     <div class="layout-column">
-       <!-- 2. 옵션 카드 + 재설정 버튼 -->
-       <section class="card" id="card-options">
-         <h2>잠재 옵션</h2>
- 
-       <div class="options-layout">
-         <div class="option-box current" id="box-current">
-           <div class="option-title">현재 옵션</div>
-           <div class="option-inner">
-             <div class="option-lines" id="lines-current"></div>
-@@ -1055,50 +1062,89 @@
-       // 큐브 종류 유효성 보정
-       ensureValidCubeKindForEquip(equip);
- 
-       // 현재 옵션을 "내 장비 잠재"로 덮어쓰기
-       const cubeKind = getSelectedCubeKind();
-       const linesText = getEquipLinesForCubeKind(equip, cubeKind);
-       const lines = [];
-       for (let i = 0; i < 3; i++) {
-         const t = linesText[i] || "-";
-         lines.push({ line: i+1, optionText: t, raw: null });
-       }
-       currentLines = lines;
-       rollCandidates = [[], [], []];
- 
-       // 통계 초기화 + 렌더
-       meisterUsed = 0;
-       mesoUsed = 0;
-       rollCount = 0;
-       logEntries = [];
-       document.getElementById("log").textContent = "";
-       updateCubeTag();
-       updateStatsTags();
-       renderAllBoxes();
-     }
- 
-+    function resetAutoConditionDefaults({ save = true } = {}) {
-+      const weaponAutoTarget = document.getElementById("weaponAutoTarget");
-+      if (weaponAutoTarget) weaponAutoTarget.value = "21";
-+
-+      const additionalAutoLines = document.getElementById("additionalAutoLines");
-+      if (additionalAutoLines) additionalAutoLines.value = "2";
-+
-+      const additionalCooldownRequired = document.getElementById("additionalCooldownRequired");
-+      if (additionalCooldownRequired) additionalCooldownRequired.checked = false;
-+
-+      const autoMainIED = document.getElementById("autoMainIED");
-+      if (autoMainIED) autoMainIED.value = "0";
-+
-+      const autoMainBossMin = document.getElementById("autoMainBossMin");
-+      if (autoMainBossMin) autoMainBossMin.value = "0";
-+
-+      const autoMainSeekDeparture = document.getElementById("autoMainSeekDeparture");
-+      if (autoMainSeekDeparture) autoMainSeekDeparture.checked = false;
-+
-+      const armorAutoTarget = document.getElementById("armorAutoTarget");
-+      if (armorAutoTarget) armorAutoTarget.value = "0";
-+
-+      const armorCooldownMin = document.getElementById("armorCooldownMin");
-+      if (armorCooldownMin) armorCooldownMin.value = "0";
-+
-+      const armorCritMin = document.getElementById("armorCritMin");
-+      if (armorCritMin) armorCritMin.value = "0";
-+
-+      const accessoryDropMin = document.getElementById("accessoryDropMin");
-+      if (accessoryDropMin) accessoryDropMin.value = "0";
-+
-+      window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
-+      if (save) saveCurrentSettings();
++    function normalizePartKey(name) {
++      return String(name || "").trim();
 +    }
 +
-+    function isMyEquipPendingSelection() {
-+      return useMyEquip && !selectedEquipKey;
-+    }
-+
-     let bcProbs = [];
-     let wcProbs = [];
-     let acProbs = []; // 명장의 큐브(윗잠재)
-     let allProbs = [];
- 
-     const CUBE_ID_BLACK = "5062010";   // 기존 윗잠재(블랙)
-     const CUBE_ID_ADDI  = "5062500";   // 기존 에디
-     const CUBE_ID_MEISTER = "2711004"; // acprobs.json 확인값
- 
-     let currentLines = [];
-     let rollCandidates = [[], [], []];
- 
-     let meisterUsed = 0; // 명장의 큐브 소모량(개)
-     let rollCount = 0;
-     let mesoUsed = 0;
-     let logEntries = [];
- 
-     let logVisible = false;
- 
-     const poolCache = new Map();
- 
-     const ONLY_ONE_KEYWORDS = [
-       "쓸만한",
-       "피격 후 무적"
-     ];
-@@ -1595,70 +1641,78 @@
- 
-       candBox.classList.remove("fade-out-card");
-       void candBox.offsetWidth;
-       candBox.classList.add("fade-out-card");
- 
-       candBox.addEventListener("animationend", () => {
-         candBox.classList.remove("fade-out-card");
- 
-         currentLines = cand.map(l => ({...l}));
-         renderAllBoxes();
- 
-         currentBox.classList.remove("fade-in-card");
-         void currentBox.offsetWidth;
-         currentBox.classList.add("fade-in-card");
-         currentBox.addEventListener("animationend", () => {
-           currentBox.classList.remove("fade-in-card");
-         }, { once:true });
-       }, { once:true });
-     }
- 
-     // ============= 이벤트 바인딩 =============
-     function handleReset() {
-       meisterUsed = 0;
-       mesoUsed = 0;
-       rollCount = 0;
-+      const eq = useMyEquip ? getSelectedNxEquip() : null;
-+      if (eq) {
-+        applyNxEquipToSimulator(eq);
-+        return;
++    function resolvePartsType(partName, slotName, slotNo) {
++      const normalizedPart = normalizePartKey(partName);
++      if (normalizedPart && PART_TO_PARTSTYPE[normalizedPart]) {
++        return PART_TO_PARTSTYPE[normalizedPart];
 +      }
-       initCurrentOption();
++      const normalizedSlot = normalizePartKey(slotName);
++      if (normalizedSlot && PART_TO_PARTSTYPE[normalizedSlot]) {
++        return PART_TO_PARTSTYPE[normalizedSlot];
++      }
++
++      const slotNumeric = Number(slotNo ?? normalizedSlot);
++      if (Number.isFinite(slotNumeric) && slotNumeric >= 1 && slotNumeric <= 20) {
++        return slotNumeric;
++      }
++
++      return null;
++    }
++
+     function isLegendary(grade) {
+       return grade === "레전드리";
      }
  
-     function handleApplyConditions() {
-       const eq = useMyEquip ? getSelectedNxEquip() : null;
-       if (eq) {
-         ensureValidCubeKindForEquip(eq);
-         updateCubeTag();
-         updateStatsTags();
-         renderAllBoxes();
-         saveCurrentSettings();
-         return;
+     function getGradeInitial(grade) {
+       if (!grade) return "-";
+       const trimmed = String(grade).trim();
+       return trimmed ? trimmed.charAt(0) : "-";
+     }
+ 
+     function formatDateYYYYMMDD(d) {
+       const y = d.getFullYear();
+       const m = String(d.getMonth() + 1).padStart(2, "0");
+       const day = String(d.getDate()).padStart(2, "0");
+       return `${y}-${m}-${day}`;
+     }
+ 
+     function getDefaultNxDate() {
+       // Open API는 지연이 있을 수 있어 기본은 전일
+       const d = new Date();
+       d.setDate(d.getDate() - 1);
+       return formatDateYYYYMMDD(d);
+     }
+ 
+     function setMyEquipStatus(text, isError=false) {
+@@ -825,51 +847,53 @@
        }
-       updateCubeTag();
-       updateStatsTags();
-       renderAllBoxes();
-       saveCurrentSettings();
+       return res.json();
      }
  
-     document.getElementById("applyResetBtn").addEventListener("click", handleApplyConditions);
-+    document.getElementById("conditionResetBtn").addEventListener("click", () => {
-+      resetAutoConditionDefaults();
-+    });
-     document.getElementById("autoResetBtn").addEventListener("click", handleReset);
+     async function fetchOcidByName(name, apiKey) {
+       const q = encodeURIComponent(name.trim());
+       return nxFetch(`/id?character_name=${q}`, apiKey);
+     }
  
+     async function fetchItemEquipment(ocid, apiKey, dateStr) {
+       const qOcid = encodeURIComponent(ocid);
+       const qDate = encodeURIComponent(dateStr);
+       return nxFetch(`/character/item-equipment?ocid=${qOcid}&date=${qDate}`, apiKey);
+     }
  
-     document.getElementById("rollBtn").addEventListener("click", () => {
-       doOneRollStep();
-     });
+     function normalizeNxEquipItems(raw, presetNo) {
+       if (!raw) return [];
+       const list = raw.item_equipment || [];
+       const out = [];
+       list.forEach((it, idx) => {
+         // preset: item_equipment_preset_no 값이 있는 경우만 필터
+         const pno = it.item_equipment_preset_no;
+         if (presetNo && pno && String(pno) !== String(presetNo)) return;
  
-     document.querySelectorAll(".option-box.candidate").forEach(box => {
-       box.addEventListener("click", (e) => {
-         const idx = Number(e.currentTarget.getAttribute("data-choice")) - 1;
-         chooseCandidate(idx);
+         const partName = it.item_equipment_part || "";
+-        const partsType = PART_TO_PARTSTYPE[partName] ?? null;
++        const slotName = it.item_equipment_slot || "";
++        const slotNo = it.item_equipment_slot_no ?? it.item_equipment_slot;
++        const partsType = resolvePartsType(partName, slotName, slotNo);
+ 
+         const mainGrade = it.potential_option_grade ?? null;
+         const addGrade  = it.additional_potential_option_grade ?? null;
+ 
+         const key = `${partName}|${it.item_name}|${it.item_equipment_slot || ""}|${idx}`;
+ 
+         out.push({
+           key,
+           idx,
+           item_name: it.item_name,
+           partName,
+           partsType,
+           reqLev: it.item_base_option?.base_equipment_level ?? it.item_base_option?.base_req_level ?? it.item_description?.req_lev ?? it.item_equipment_req_level ?? it.item_equipment_level ?? it.item_equipment_req_lev ?? it.item_equipment_reqlev ?? it.item_req_lev ?? it.item_equipment_req ?? it.item_equipment_req_level ?? it.item_equipment_req_lev, // defensive
+           // most reliable in your sample: item_equipment_req_level
+           reqLev2: it.item_equipment_req_level,
+           mainGrade,
+           addGrade,
+           mainLines: [it.potential_option_1, it.potential_option_2, it.potential_option_3].filter(Boolean),
+           addLines: [it.additional_potential_option_1, it.additional_potential_option_2, it.additional_potential_option_3].filter(Boolean),
+         });
        });
-     });
  
-     document.querySelectorAll('input[name="cubeKind"]').forEach(r => {
-       r.addEventListener("change", () => {
-         // 큐브 타입 변경 시 통계 초기화
-         meisterUsed = 0;
-         mesoUsed = 0;
-         rollCount = 0;
- 
-         updateCubeTag();
-         const eq = useMyEquip ? getSelectedNxEquip() : null;
-         if (eq) {
-           ensureValidCubeKindForEquip(eq);
-@@ -1717,59 +1771,61 @@
-     });
- 
-     
-     // ====== 내 장비 불러오기 UI 바인딩 ======
-     function initMyEquipUI() {
-       const toggle = document.getElementById("useMyEquipToggle");
-       const panel = document.getElementById("myEquipPanel");
-       const apiInput = document.getElementById("nxApiKey");
-       const clearBtn = document.getElementById("clearApiKeyBtn");
-       const nameInput = document.getElementById("characterName");
-       const fetchBtn = document.getElementById("fetchMyEquipBtn");
-       const presetSel = document.getElementById("equipPreset");
-       const equipSel = document.getElementById("myEquipSelect");
- 
-       // load saved api key
-       const savedKey = localStorage.getItem(NX_API_STORAGE_KEY);
-       if (savedKey && apiInput) apiInput.value = savedKey;
- 
-       function setPanelVisible(v) {
-         if (panel) panel.style.display = v ? "block" : "none";
-       }
- 
-       function setMode(v) {
-         useMyEquip = v;
-         setPanelVisible(v);
-+        window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
-         if (!v) {
-           // release lock and reset UI
-           setControlsDisabledByMyEquipMode(false);
-           nxEquipRaw = null;
-           nxEquipItems = [];
-           selectedEquipKey = "";
-           const auto = document.getElementById("myEquipAutoPartLevel");
-           if (auto) auto.textContent = "-";
-           updateMyEquipSideUI(null);
-+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
-           if (equipSel) {
-             equipSel.innerHTML = "<option value=''> (먼저 장비를 불러오세요) </option>";
-             equipSel.disabled = true;
-           }
-           setMyEquipStatus("");
-           // 기존 동작으로 복귀: 현재 설정값 기반 재초기화
-           initCurrentOption();
-         }
-       }
- 
-       if (toggle) {
-         toggle.addEventListener("change", () => {
-           setMode(toggle.checked);
-         });
-       }
- 
-       if (clearBtn) {
-         clearBtn.addEventListener("click", () => {
-           localStorage.removeItem(NX_API_STORAGE_KEY);
-           if (apiInput) apiInput.value = "";
-           setMyEquipStatus("저장된 키를 삭제했습니다.");
-         });
-       }
- 
-       async function doFetchEquip() {
-@@ -1782,93 +1838,97 @@
-         fetchBtn.disabled = true;
- 
-         try {
-           const ocidRes = await fetchOcidByName(name, apiKey);
-           const ocid = ocidRes?.ocid;
-           if (!ocid) throw new Error("OCID를 찾지 못했습니다.");
- 
-           const dateStr = getDefaultNxDate();
-           setMyEquipStatus(`장비 조회 중... (기준일자: ${dateStr})`);
-           const equipRes = await fetchItemEquipment(ocid, apiKey, dateStr);
-           nxEquipRaw = equipRes;
- 
-           // 저장(성공 시)
-           localStorage.setItem(NX_API_STORAGE_KEY, apiKey);
- 
-           // preset 반영
-           const presetNo = presetSel?.value || "1";
-           nxEquipItems = normalizeNxEquipItems(nxEquipRaw, presetNo);
- 
-           // item_equipment_preset_# 값이 없는 응답이면 위 필터로 다 비게 될 수 있으니 fallback
-           if (!nxEquipItems.length) {
-             nxEquipItems = normalizeNxEquipItems(nxEquipRaw, null);
-           }
- 
-           renderMyEquipSelect();
-+          resetAutoConditionDefaults();
-           setMyEquipStatus(`불러오기 완료: ${nxEquipItems.length}개 장비`);
- 
-           const detectedStat = detectMainStatFromEquipList(nxEquipItems, getSelectedCubeKind());
-           applyMainStatSelection(detectedStat);
- 
-           // my mode에서 레벨/부위 선택 잠그기(아이템 선택 후)
-           setControlsDisabledByMyEquipMode(true);
-+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
- 
-           // 프리셋 변경 시 아이템 재구성
-         } catch (err) {
-           console.error(err);
-           setMyEquipStatus(`불러오기 실패: ${err.message}`, true);
-           alert(`불러오기 실패: ${err.message}`);
-         } finally {
-           fetchBtn.disabled = false;
-         }
-       }
- 
-       if (fetchBtn) fetchBtn.addEventListener("click", doFetchEquip);
- 
-       if (presetSel) {
-         presetSel.addEventListener("change", () => {
-           if (!nxEquipRaw) return;
-           const presetNo = presetSel.value;
-           nxEquipItems = normalizeNxEquipItems(nxEquipRaw, presetNo);
-           if (!nxEquipItems.length) nxEquipItems = normalizeNxEquipItems(nxEquipRaw, null);
-           selectedEquipKey = "";
-           renderMyEquipSelect();
-           updateMyEquipSideUI(null);
-+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
-         });
-       }
- 
-       if (equipSel) {
-         equipSel.addEventListener("change", () => {
-           selectedEquipKey = equipSel.value;
-           const eq = getSelectedNxEquip();
-           updateMyEquipSideUI(eq);
- 
-           if (!eq) return;
- 
-           // 기본 side가 레전더리인지 확인 후 적용
-           ensureValidCubeKindForEquip(eq);
-           applyNxEquipToSimulator(eq);
-+          window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
-         });
-       }
- 
-       // 초기 토글 상태
-       setPanelVisible(false);
-     }
- 
- const storedSettings = getStoredSettings();
-     applyStoredSettings(storedSettings);
-     updateCubeTag();
-     updateLogVisibility();
-     initMyEquipUI();
- 
-     // ====== 업데이트 내역 토글 ======
-     window.addEventListener("load", () => {
-       const box = document.getElementById("changelog");
-       const btn = document.getElementById("toggleChangelogBtn");
-       if (!box || !btn) return;
- 
-       let changelogVisible = false;
- 
-       function updateChangelogVisibility() {
-         box.style.display = changelogVisible ? "block" : "none";
-         btn.textContent = changelogVisible ? "업데이트 내역 접기" : "업데이트 내역 보기";
-       }
+       // reqLev 정리: sample 기준 item_equipment_req_level 사용
+       out.forEach(o => {
+         const v = Number(o.reqLev2 ?? o.reqLev);
