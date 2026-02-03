@@ -144,6 +144,25 @@
       padding:6px 10px;
       font-size:0.8rem;
     }
+    .btn-scale-half {
+      padding:4px 6px;
+      font-size:0.65rem;
+      height:22px;
+      min-height:22px;
+      line-height:1;
+    }
+    .btn-scale-two-thirds {
+      padding:6px 8px;
+      font-size:0.8rem;
+    }
+    .btn-scale-three-quarters {
+      padding:4px 6px;
+      font-size:0.7rem;
+    }
+    .btn-scale-half-vertical {
+      padding-top:2px;
+      padding-bottom:2px;
+    }
     .btn-inline {
       height:34px;
       padding:6px 12px;
@@ -172,6 +191,12 @@
       background:linear-gradient(135deg,#ef4444,#f87171);
       color:#111827;
       box-shadow:0 10px 24px rgba(239,68,68,0.35);
+    }
+    .btn:disabled,
+    .btn[disabled] {
+      cursor:not-allowed;
+      opacity:0.5;
+      box-shadow:none;
     }
     .api-button-row {
       display:flex;
@@ -457,6 +482,15 @@
       color:#6b7280;
       opacity:0.55;
     }
+    .cube-kind-option {
+      display:flex;
+      align-items:flex-start;
+      gap:6px;
+      line-height:1.2;
+    }
+    .cube-kind-option input[type="radio"] {
+      margin-top:2px;
+    }
 
     .main-stat-grid {
       display:grid;
@@ -496,8 +530,8 @@
       gap:8px;
     }
     .condition-actions .btn-reset {
-      flex:0 0 12.5%;
-      min-width:72px;
+      flex:0 0 15%;
+      min-width:86px;
     }
     .condition-actions .btn-apply {
       flex:0 0 50%;
@@ -508,7 +542,7 @@
       align-items:center;
       gap:8px;
       margin-bottom:6px;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;
     }
     .my-equip-action-row .btn {
       width:auto;
@@ -542,6 +576,12 @@
       opacity:1;
       font-weight:700;
     }
+    .section-divider {
+      height:1px;
+      background:#2d2d2d;
+      margin:12px 0;
+      border-radius:999px;
+    }
   </style>
     <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-VZJQL22RBV"></script>
@@ -570,9 +610,9 @@
         <!-- 내 장비 불러오기 (Nexon Open API) -->
         <div style="margin-top:10px;">
           <div class="my-equip-action-row">
-            <button type="button" class="btn btn-toggle" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
+            <button type="button" class="btn btn-toggle btn-scale-three-quarters" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
             <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
-            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
+            <button type="button" class="btn btn-secondary btn-scale-half btn-scale-half-vertical" id="clearApiKeyBtn">저장된 키 삭제</button>
           </div>
 
           <div id="myEquipPanel" class="my-equip-panel" style="display:none;">
@@ -672,9 +712,9 @@
       <div class="row">
         <div>
           <label>잠재능력 재설정 종류</label>
-          <label class="cube-kind-option" data-cube-kind="black"><input type="radio" name="cubeKind" value="black" checked />윗잠재 (블랙큐브)</label>
-          <label class="cube-kind-option" data-cube-kind="meister"><input type="radio" name="cubeKind" value="meister" />명장의 큐브</label>
-          <label class="cube-kind-option" data-cube-kind="addi"><input type="radio" name="cubeKind" value="addi" />아랫잠재 (에디셔널 큐브)</label>
+          <label class="cube-kind-option" data-cube-kind="black"><input type="radio" name="cubeKind" value="black" checked /><span>윗잠재 (블랙큐브)</span></label>
+          <label class="cube-kind-option" data-cube-kind="meister"><input type="radio" name="cubeKind" value="meister" /><span>명장의 큐브</span></label>
+          <label class="cube-kind-option" data-cube-kind="addi"><input type="radio" name="cubeKind" value="addi" /><span>아랫잠재 (에디셔널 큐브)</span></label>
         </div>
         <div>
           <label>주스탯</label>
@@ -688,6 +728,8 @@
           </div>
         </div>
       </div>
+
+      <div class="section-divider"></div>
 
       <!-- 무기 전용 자동 돌리기 설정 UI -->
       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
@@ -826,6 +868,8 @@
           </div>
         </div>
       </div>
+
+      <div class="section-divider"></div>
 
       <div class="condition-actions">
         <button class="btn btn-danger btn-reset" id="conditionResetBtn">조건 초기화</button>
@@ -2026,7 +2070,10 @@
         const hasKey = Boolean((apiInput?.value || "").trim());
         if (apiInputWrap) apiInputWrap.classList.toggle("is-visible", !hasKey);
         if (nameArea) nameArea.classList.toggle("is-visible", hasKey);
-        if (clearBtn) clearBtn.style.display = hasKey ? "inline-flex" : "none";
+        if (clearBtn) {
+          clearBtn.disabled = !hasKey;
+          clearBtn.setAttribute("aria-disabled", String(!hasKey));
+        }
       }
 
       function setPanelVisible(v) {

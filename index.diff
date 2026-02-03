@@ -1,8 +1,8 @@
 diff --git a/index.html b/index.html
-index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b621a85a32 100644
+index 1678af649badee42a7ce859b3221b0b621a85a32..885ffb86d3f95116a2e2aa84e394d1ca84a19a03 100644
 --- a/index.html
 +++ b/index.html
-@@ -122,67 +122,73 @@
+@@ -122,79 +122,104 @@
        box-shadow:0 10px 25px rgba(140,175,11,0.45);
      }
      .btn-no-glow {
@@ -28,10 +28,29 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
        padding:6px 10px;
        font-size:0.8rem;
      }
-+    .btn-inline {
-+      height:34px;
-+      padding:6px 12px;
++    .btn-scale-half {
++      padding:4px 6px;
++      font-size:0.65rem;
++      height:22px;
++      min-height:22px;
++      line-height:1;
 +    }
++    .btn-scale-two-thirds {
++      padding:6px 8px;
++      font-size:0.8rem;
++    }
++    .btn-scale-three-quarters {
++      padding:4px 6px;
++      font-size:0.7rem;
++    }
++    .btn-scale-half-vertical {
++      padding-top:2px;
++      padding-bottom:2px;
++    }
+     .btn-inline {
+       height:34px;
+       padding:6px 12px;
+     }
      .btn-api {
        flex:1;
      }
@@ -44,24 +63,25 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
        border:1px solid #3f3f46;
        box-shadow:none;
      }
--    .btn-toggle.is-active {
--      background:linear-gradient(135deg,#8CAF0B,#a9d51a);
--      color:#111827;
--      border-color:transparent;
--      box-shadow:0 10px 25px rgba(140,175,11,0.45);
-+    .btn-toggle::before {
-+      content:"✓";
-+      display:inline-block;
-+      width:1em;
-+      margin-right:4px;
-+      color:#8CAF0B;
-+      opacity:0;
+     .btn-toggle::before {
+       content:"✓";
+       display:inline-block;
+       width:1em;
+       margin-right:4px;
+       color:#8CAF0B;
+       opacity:0;
      }
      .btn-danger {
        background:linear-gradient(135deg,#ef4444,#f87171);
        color:#111827;
        box-shadow:0 10px 24px rgba(239,68,68,0.35);
      }
++    .btn:disabled,
++    .btn[disabled] {
++      cursor:not-allowed;
++      opacity:0.5;
++      box-shadow:none;
++    }
      .api-button-row {
        display:flex;
        gap:8px;
@@ -81,7 +101,57 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
        padding:0;
        margin:-1px;
        overflow:hidden;
-@@ -464,135 +470,175 @@
+       clip:rect(0, 0, 0, 0);
+       white-space:nowrap;
+       border:0;
+     }
+     .my-equip-panel {
+       margin-top:8px;
+@@ -435,166 +460,181 @@
+     }
+     .log-toggle-btn {
+       border-radius:999px;
+       border:1px solid #3f3f46;
+       background:#111111;
+       color:#e5e7eb;
+       font-size:0.75rem;
+       padding:2px 8px;
+       cursor:pointer;
+     }
+     .log-toggle-btn:hover {
+       background:#1f1f1f;
+     }
+ 
+     #card-settings,
+     #card-options,
+     #card-stats,
+     #card-log {
+       width:100%;
+     }
+ 
+     .cube-kind-option.disabled {
+       color:#6b7280;
+       opacity:0.55;
+     }
++    .cube-kind-option {
++      display:flex;
++      align-items:flex-start;
++      gap:6px;
++      line-height:1.2;
++    }
++    .cube-kind-option input[type="radio"] {
++      margin-top:2px;
++    }
+ 
+     .main-stat-grid {
+       display:grid;
+       grid-template-columns:repeat(2, minmax(0,1fr));
+       gap:6px 10px;
+       margin-top:4px;
+     }
+     .main-stat-grid label {
+       margin-bottom:0;
+       display:flex;
        align-items:flex-start;
        gap:6px;
        line-height:1.2;
@@ -107,59 +177,65 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
      .condition-actions {
        margin-top:10px;
        display:flex;
--      justify-content:space-between;
-+      justify-content:flex-start;
-+      gap:8px;
-+    }
-+    .condition-actions .btn-reset {
-+      flex:0 0 12.5%;
-+      min-width:72px;
-+    }
-+    .condition-actions .btn-apply {
-+      flex:0 0 50%;
-+      margin-left:auto;
-+    }
-+    .my-equip-action-row {
-+      display:flex;
-+      align-items:center;
-+      gap:8px;
-+      margin-bottom:6px;
-+      flex-wrap:wrap;
-+    }
-+    .my-equip-action-row .btn {
-+      width:auto;
-+      height:34px;
-+    }
-+    .my-equip-name-row {
-+      display:flex;
-+      align-items:flex-end;
+       justify-content:flex-start;
        gap:8px;
      }
--    .condition-actions .btn {
--      flex:0 0 33%;
-+    .my-equip-name-row > div {
-+      flex:1;
-+    }
-+    .my-equip-name-row .name-input {
-+      flex:1;
-+      max-width:calc(50% - 4px);
-+    }
-+    .my-equip-name-row .name-action {
-+      flex:0 0 auto;
-+    }
-+    .my-equip-name-row .btn {
-+      height:34px;
-+    }
-+    .btn-toggle.is-active {
-+      background:#1f2a10;
-+      color:#e5e7eb;
-+      border-color:#8CAF0B;
-+      box-shadow:none;
-+    }
-+    .btn-toggle.is-active::before {
-+      opacity:1;
-+      font-weight:700;
+     .condition-actions .btn-reset {
+-      flex:0 0 12.5%;
+-      min-width:72px;
++      flex:0 0 15%;
++      min-width:86px;
      }
+     .condition-actions .btn-apply {
+       flex:0 0 50%;
+       margin-left:auto;
+     }
+     .my-equip-action-row {
+       display:flex;
+       align-items:center;
+       gap:8px;
+       margin-bottom:6px;
+-      flex-wrap:wrap;
++      flex-wrap:nowrap;
+     }
+     .my-equip-action-row .btn {
+       width:auto;
+       height:34px;
+     }
+     .my-equip-name-row {
+       display:flex;
+       align-items:flex-end;
+       gap:8px;
+     }
+     .my-equip-name-row > div {
+       flex:1;
+     }
+     .my-equip-name-row .name-input {
+       flex:1;
+       max-width:calc(50% - 4px);
+     }
+     .my-equip-name-row .name-action {
+       flex:0 0 auto;
+     }
+     .my-equip-name-row .btn {
+       height:34px;
+     }
+     .btn-toggle.is-active {
+       background:#1f2a10;
+       color:#e5e7eb;
+       border-color:#8CAF0B;
+       box-shadow:none;
+     }
+     .btn-toggle.is-active::before {
+       opacity:1;
+       font-weight:700;
+     }
++    .section-divider {
++      height:1px;
++      background:#2d2d2d;
++      margin:12px 0;
++      border-radius:999px;
++    }
    </style>
      <!-- Google tag (gtag.js) -->
    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VZJQL22RBV"></script>
@@ -187,18 +263,12 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
  
          <!-- 내 장비 불러오기 (Nexon Open API) -->
          <div style="margin-top:10px;">
--          <div class="row" style="margin-bottom:6px;">
--            <div>
--              <button type="button" class="btn btn-toggle btn-block" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
--              <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
--            </div>
--            <div>
--              <button type="button" class="btn btn-secondary btn-block" id="clearApiKeyBtn">저장된 키 삭제</button>
--            </div>
-+          <div class="my-equip-action-row">
-+            <button type="button" class="btn btn-toggle" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
-+            <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
-+            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
+           <div class="my-equip-action-row">
+-            <button type="button" class="btn btn-toggle" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
++            <button type="button" class="btn btn-toggle btn-scale-three-quarters" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
+             <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
+-            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
++            <button type="button" class="btn btn-secondary btn-scale-half btn-scale-half-vertical" id="clearApiKeyBtn">저장된 키 삭제</button>
            </div>
  
            <div id="myEquipPanel" class="my-equip-panel" style="display:none;">
@@ -207,18 +277,14 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
                <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
              </div>
              <div id="myEquipNameArea" class="my-equip-step">
--              <div class="row">
--                <div>
-+              <div class="my-equip-name-row">
-+                <div class="name-input">
+               <div class="my-equip-name-row">
+                 <div class="name-input">
                    <label for="characterName">캐릭터 닉네임</label>
                    <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                  </div>
--                <div>
-+                <div class="name-action">
+                 <div class="name-action">
                    <label class="visually-hidden" for="fetchMyEquipBtn">장비 불러오기</label>
--                  <button type="button" class="btn btn-primary btn-block btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
-+                  <button type="button" class="btn btn-primary btn-no-glow btn-compact btn-inline" id="fetchMyEquipBtn">장비 불러오기</button>
+                   <button type="button" class="btn btn-primary btn-no-glow btn-compact btn-inline" id="fetchMyEquipBtn">장비 불러오기</button>
                  </div>
                </div>
                <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
@@ -228,54 +294,81 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
                <div>
                  <label for="equipPreset">프리셋</label>
                  <select id="equipPreset">
-                   <option value="1" selected>프리셋 1</option>
-                   <option value="2">프리셋 2</option>
-                   <option value="3">프리셋 3</option>
-                 </select>
-               </div>
-               <div>
-                 <label for="myEquipSelect">장비 선택 (레전만 가능)</label>
-                 <select id="myEquipSelect" disabled>
-                   <option value="">(먼저 장비를 불러오세요)</option>
-                 </select>
-               </div>
-             </div>
- 
-             <div class="row" style="margin-top:6px;">
-               <div>
-                 <label>자동 설정</label>
--                <div style="font-size:0.85rem; color:#e5e7eb;">
--                  <div style="margin-top:4px;">시작 옵션: <span style="color:#a1a1aa;">선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
--                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint" style="color:#a1a1aa;">-</span></div>
-+                <div style="font-size:0.85rem; color:#a1a1aa;">
-+                  <div style="margin-top:4px;">시작 옵션: <span>선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
-+                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint">-</span></div>
-                 </div>
-               </div>
-             </div>
- 
-             <div style="margin-top:6px; font-size:0.75rem; color:#71717a; line-height:1.35;">
-               * Open API는 데이터 반영이 지연될 수 있습니다. 기본 조회일자는 “전일(어제)”입니다.
-             </div>
-           </div>
+@@ -650,67 +690,69 @@
+             <option value="3">보조무기(포스실드 제외)</option>
+             <option value="4">포스실드/소울링</option>
+             <option value="5">방패</option>
+             <option value="6">모자</option>
+             <option value="7">상의</option>
+             <option value="8">한벌옷</option>
+             <option value="9">하의</option>
+             <option value="10">신발</option>
+             <option value="11">장갑</option>
+             <option value="12">망토</option>
+             <option value="13">벨트</option>
+             <option value="14">어깨장식</option>
+             <option value="15">얼굴장식</option>
+             <option value="16">눈장식</option>
+             <option value="17">귀고리</option>
+             <option value="18">반지</option>
+             <option value="19">펜던트</option>
+             <option value="20">기계심장</option>
+           </select>
          </div>
- 
+       </div>
  
        <div class="row">
          <div>
-           <label for="itemLevel">아이템 레벨</label>
-           <select id="itemLevel">
-             <option value="100">100</option>
-             <option value="120">120</option>
-             <option value="130">130</option>
-             <option value="140">140</option>
-             <option value="150">150</option>
-             <option value="160">160</option>
-             <option value="200" selected>200</option>
-             <option value="250">250</option>
-           </select>
+           <label>잠재능력 재설정 종류</label>
+-          <label class="cube-kind-option" data-cube-kind="black"><input type="radio" name="cubeKind" value="black" checked />윗잠재 (블랙큐브)</label>
+-          <label class="cube-kind-option" data-cube-kind="meister"><input type="radio" name="cubeKind" value="meister" />명장의 큐브</label>
+-          <label class="cube-kind-option" data-cube-kind="addi"><input type="radio" name="cubeKind" value="addi" />아랫잠재 (에디셔널 큐브)</label>
++          <label class="cube-kind-option" data-cube-kind="black"><input type="radio" name="cubeKind" value="black" checked /><span>윗잠재 (블랙큐브)</span></label>
++          <label class="cube-kind-option" data-cube-kind="meister"><input type="radio" name="cubeKind" value="meister" /><span>명장의 큐브</span></label>
++          <label class="cube-kind-option" data-cube-kind="addi"><input type="radio" name="cubeKind" value="addi" /><span>아랫잠재 (에디셔널 큐브)</span></label>
          </div>
-@@ -760,52 +806,52 @@
+         <div>
+           <label>주스탯</label>
+           <div class="main-stat-grid">
+             <label><input type="radio" name="mainStat" value="STR" checked /><span>STR</span></label>
+             <label><input type="radio" name="mainStat" value="DEX" /><span>DEX</span></label>
+             <label><input type="radio" name="mainStat" value="INT" /><span>INT</span></label>
+             <label><input type="radio" name="mainStat" value="LUK" /><span>LUK</span></label>
+             <label><input type="radio" name="mainStat" value="ALLSTAT" /><span>올스탯 (제논 용)</span></label>
+             <label><input type="radio" name="mainStat" value="ANY" /><span>아무거나 (대장장이 용)</span></label>
+           </div>
+         </div>
+       </div>
+ 
++      <div class="section-divider"></div>
++
+       <!-- 무기 전용 자동 돌리기 설정 UI -->
+       <div id="weaponAutoContainer" style="margin-top:8px; display:none;">
+         <!--
+         <label style="margin-bottom:4px;">자동 돌리기 설정 (무기류/장신구/방어구)</label>
+         <div style="font-size:0.8rem; color:#a1a1aa; margin-bottom:6px;">
+           무기류: 보공/방무/공마 조합 & 에디 공마% 합계, 장신구/방어구: 주스탯% 및 에디 유효옵션 자동 돌리기 제공<br>
+         </div>
+         -->
+ 
+         <!-- 아랫잠재(에디) 설정: ATK/MATK% 합계 임계값 -->
+         <div data-auto-kind="addi-weapon">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (공격력 / 마력 %)</label>
+           <details class="auto-help">
+             <summary>설명 보기</summary>
+             <div>공격력/마력 % 합계가 설정값 이상이면 자동으로 멈춥니다.</div>
+           </details>
+           <div style="display:flex; align-items:center; gap:8px;">
+             <label for="weaponAutoTarget" style="margin:0; font-size:0.85rem;">목표 공마 %</label>
+             <input type="number" id="weaponAutoTarget" value="21" min="0" max="39" style="max-width:80px;" />
+           </div>
+         </div>
+ 
+         <!-- 아랫잠재(에디) 설정: 장신구/방어구 유효 옵션 줄 수 -->
+         <div data-auto-kind="addi-stat" style="margin-top:10px;">
+           <label style="margin-bottom:4px;">아랫잠재 자동 돌리기 (장신구/방어구)</label>
+@@ -805,50 +847,52 @@
+               <option value="6">6초</option>
              </select>
            </div>
  
@@ -300,11 +393,11 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
          </div>
        </div>
  
++      <div class="section-divider"></div>
++
        <div class="condition-actions">
--        <button class="btn btn-danger" id="conditionResetBtn">조건 초기화</button>
--        <button class="btn btn-secondary" id="applyResetBtn">조건 적용</button>
-+        <button class="btn btn-danger btn-reset" id="conditionResetBtn">조건 초기화</button>
-+        <button class="btn btn-secondary btn-apply" id="applyResetBtn">조건 적용</button>
+         <button class="btn btn-danger btn-reset" id="conditionResetBtn">조건 초기화</button>
+         <button class="btn btn-secondary btn-apply" id="applyResetBtn">조건 적용</button>
        </div>
        </section>
  
@@ -327,6 +420,59 @@ index 769154eb642e67bb1626cdf2f570b77678ddfbf9..1678af649badee42a7ce859b3221b0b6
  
        <div class="options-layout">
          <div class="option-box current" id="box-current">
-           <div class="option-title">현재 옵션</div>
-           <div class="option-inner">
-             <div class="option-lines" id="lines-current"></div>
+@@ -2004,51 +2048,54 @@
+     });
+ 
+     
+     // ====== 내 장비 불러오기 UI 바인딩 ======
+     function initMyEquipUI() {
+       const toggle = document.getElementById("useMyEquipToggle");
+       const toggleBtn = document.getElementById("useMyEquipToggleBtn");
+       const panel = document.getElementById("myEquipPanel");
+       const apiInput = document.getElementById("nxApiKey");
+       const apiInputWrap = document.getElementById("apiKeyInputWrap");
+       const clearBtn = document.getElementById("clearApiKeyBtn");
+       const nameInput = document.getElementById("characterName");
+       const fetchBtn = document.getElementById("fetchMyEquipBtn");
+       const presetSel = document.getElementById("equipPreset");
+       const equipSel = document.getElementById("myEquipSelect");
+       const nameArea = document.getElementById("myEquipNameArea");
+ 
+       // load saved api key
+       const savedKey = localStorage.getItem(NX_API_STORAGE_KEY);
+       if (savedKey && apiInput) apiInput.value = savedKey;
+ 
+       function updateApiKeyUI() {
+         const hasKey = Boolean((apiInput?.value || "").trim());
+         if (apiInputWrap) apiInputWrap.classList.toggle("is-visible", !hasKey);
+         if (nameArea) nameArea.classList.toggle("is-visible", hasKey);
+-        if (clearBtn) clearBtn.style.display = hasKey ? "inline-flex" : "none";
++        if (clearBtn) {
++          clearBtn.disabled = !hasKey;
++          clearBtn.setAttribute("aria-disabled", String(!hasKey));
++        }
+       }
+ 
+       function setPanelVisible(v) {
+         if (panel) panel.style.display = v ? "block" : "none";
+       }
+ 
+       function setMode(v) {
+         useMyEquip = v;
+         setPanelVisible(v);
+         window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
+         if (!v) {
+           // release lock and reset UI
+           setControlsDisabledByMyEquipMode(false);
+           nxEquipRaw = null;
+           nxEquipItems = [];
+           selectedEquipKey = "";
+           const auto = document.getElementById("myEquipAutoPartLevel");
+           if (auto) auto.textContent = "-";
+           updateMyEquipSideUI(null);
+           window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
+           if (equipSel) {
+             equipSel.innerHTML = "<option value=''> (먼저 장비를 불러오세요) </option>";
+             equipSel.disabled = true;
+           }
+           setMyEquipStatus("");
