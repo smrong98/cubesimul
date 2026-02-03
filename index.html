@@ -134,6 +134,13 @@
       transform:translateY(1px) scale(.99);
       box-shadow:0 4px 12px rgba(0,0,0,0.7);
     }
+    .btn-compact {
+      padding:6px 10px;
+      font-size:0.8rem;
+    }
+    .btn-api {
+      flex:1;
+    }
 
     .options-layout {
       margin-top:8px;
@@ -400,14 +407,14 @@
                 <label for="nxApiKey">Nexon Open API Key</label>
                 <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                 <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                  <button type="button" class="btn btn-secondary" id="clearApiKeyBtn" style="padding:6px 10px; font-size:0.8rem;">저장된 키 삭제</button>
+                  <button type="button" class="btn btn-secondary btn-compact btn-api" id="clearApiKeyBtn">저장된 키 삭제</button>
                 </div>
               </div>
               <div>
                 <label for="characterName">캐릭터 닉네임</label>
                 <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                 <div style="display:flex; gap:8px; margin-top:10px;">
-                  <button type="button" class="btn btn-primary" id="fetchMyEquipBtn" style="flex:1;">장비 불러오기</button>
+                  <button type="button" class="btn btn-primary btn-compact btn-api" id="fetchMyEquipBtn">장비 불러오기</button>
                 </div>
                 <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
               </div>
@@ -638,7 +645,7 @@
       </div>
 
       <div style="margin-top:10px; display:flex; gap:8px;">
-        <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">적용 및 리셋</button>
+        <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">조건 적용</button>
       </div>
       </section>
 
@@ -753,6 +760,12 @@
       return grade === "레전드리";
     }
 
+    function getGradeInitial(grade) {
+      if (!grade) return "-";
+      const trimmed = String(grade).trim();
+      return trimmed ? trimmed.charAt(0) : "-";
+    }
+
     function formatDateYYYYMMDD(d) {
       const y = d.getFullYear();
       const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -860,12 +873,10 @@
     }
 
     function buildEquipOptionLabel(e) {
-      const main = e.mainGrade ? `윗:${e.mainGrade}` : "윗:-";
-      const add  = e.addGrade  ? `아랫:${e.addGrade}` : "아랫:-";
-      const lv   = e.reqLev ? `Lv.${e.reqLev}` : "Lv.-";
+      const main = getGradeInitial(e.mainGrade);
+      const add = getGradeInitial(e.addGrade);
       const part = e.partName || "?";
-      const reason = (!isLegendary(e.mainGrade) && !isLegendary(e.addGrade)) ? " (레전더리 없음)" : "";
-      return `[${part}] ${e.item_name} (${lv}) | ${main} / ${add}${reason}`;
+      return `[${part}] ${e.item_name} (${main}/${add})`;
     }
 
     function renderMyEquipSelect() {
@@ -981,6 +992,34 @@
       return side === "addi" ? equip.addLines : equip.mainLines;
     }
 
+    function detectMainStatFromEquipList(equipList, cubeKind) {
+      const counts = { STR: 0, DEX: 0, INT: 0, LUK: 0, ALLSTAT: 0 };
+      if (!Array.isArray(equipList) || !equipList.length) return null;
+      equipList.forEach(equip => {
+        const linesText = getEquipLinesForCubeKind(equip, cubeKind);
+        if (!Array.isArray(linesText)) return;
+        linesText.forEach(line => {
+          const text = normalizeStatText(line);
+          if (!text) return;
+          if (text.includes("올스탯")) counts.ALLSTAT += 1;
+          if (text.includes("STR") || text.includes("힘")) counts.STR += 1;
+          if (text.includes("DEX") || text.includes("민첩")) counts.DEX += 1;
+          if (text.includes("INT") || text.includes("지력")) counts.INT += 1;
+          if (text.includes("LUK") || text.includes("운")) counts.LUK += 1;
+        });
+      });
+
+      let max = 0;
+      Object.values(counts).forEach(val => {
+        if (val > max) max = val;
+      });
+      if (!max) return null;
+
+      const winners = Object.entries(counts).filter(([, val]) => val === max);
+      if (winners.length !== 1) return null;
+      return winners[0][0];
+    }
+
     function applyNxEquipToSimulator(equip) {
       if (!equip) return;
 
@@ -1036,7 +1075,6 @@
       updateCubeTag();
       updateStatsTags();
       renderAllBoxes();
-      applyMainStatSelection(detectMainStatFromLines(linesText));
     }
 
     let bcProbs = [];
@@ -1582,7 +1620,23 @@
       initCurrentOption();
     }
 
-    document.getElementById("applyResetBtn").addEventListener("click", handleReset);
+    function handleApplyConditions() {
+      const eq = useMyEquip ? getSelectedNxEquip() : null;
+      if (eq) {
+        ensureValidCubeKindForEquip(eq);
+        updateCubeTag();
+        updateStatsTags();
+        renderAllBoxes();
+        saveCurrentSettings();
+        return;
+      }
+      updateCubeTag();
+      updateStatsTags();
+      renderAllBoxes();
+      saveCurrentSettings();
+    }
+
+    document.getElementById("applyResetBtn").addEventListener("click", handleApplyConditions);
     document.getElementById("autoResetBtn").addEventListener("click", handleReset);
 
 
@@ -1751,6 +1805,9 @@
 
           renderMyEquipSelect();
           setMyEquipStatus(`불러오기 완료: ${nxEquipItems.length}개 장비`);
+
+          const detectedStat = detectMainStatFromEquipList(nxEquipItems, getSelectedCubeKind());
+          applyMainStatSelection(detectedStat);
 
           // my mode에서 레벨/부위 선택 잠그기(아이템 선택 후)
           setControlsDisabledByMyEquipMode(true);
