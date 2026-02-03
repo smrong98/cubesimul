@@ -93,8 +93,8 @@
       font-size:0.9rem;
     }
     input[type="radio"] {
-      transform:translateY(1px);
       margin-right:4px;
+      vertical-align:middle;
     }
     .row {
       display:flex;
@@ -484,12 +484,12 @@
     }
     .cube-kind-option {
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       gap:6px;
       line-height:1.2;
     }
     .cube-kind-option input[type="radio"] {
-      margin-top:2px;
+      margin-top:0;
     }
 
     .main-stat-grid {
@@ -501,9 +501,12 @@
     .main-stat-grid label {
       margin-bottom:0;
       display:flex;
-      align-items:flex-start;
+      align-items:center;
       gap:6px;
       line-height:1.2;
+    }
+    .main-stat-grid label input[type="radio"] {
+      margin-top:0;
     }
     .main-stat-grid label span {
       display:block;

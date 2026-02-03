@@ -1,66 +1,172 @@
 diff --git a/index.html b/index.html
-index 8bad58975d8f156ab94e683d39b4fe600ec7b57e..5f204ad6d1d96837bd6c7b0f51efb030969f34c2 100644
+index 8bad58975d8f156ab94e683d39b4fe600ec7b57e..f5228435089452c4a398e88f068d8760d2137f99 100644
 --- a/index.html
 +++ b/index.html
-@@ -1144,56 +1144,59 @@
- 
-     async function nxFetch(path, apiKey) {
-       const res = await fetch(`${NX_BASE}${path}`, {
-         headers: { "x-nxopen-api-key": apiKey }
-       });
-       if (!res.ok) {
-         const t = await res.text().catch(() => "");
-         throw new Error(`HTTP ${res.status} ${res.statusText}${t ? " - " + t : ""}`);
+@@ -70,54 +70,50 @@
+       border-bottom:1px solid #2d2d2d;
+       padding-bottom:4px;
+       color:#ffffff;
+     }
+     @media (max-width: 768px) {
+       .card {
+         width:100%;
        }
-       return res.json();
      }
  
-     async function fetchOcidByName(name, apiKey) {
-       const q = encodeURIComponent(name.trim());
-       return nxFetch(`/id?character_name=${q}`, apiKey);
+     label {
+       font-size:0.85rem;
+       display:block;
+       margin-bottom:4px;
+     }
+     input[type="number"],
+     select {
+       width:100%;
+       padding:6px 8px;
+       border-radius:8px;
+       border:1px solid #3f3f46;
+       background:#111111;
+       color:#e5e7eb;
+       font-size:0.9rem;
+     }
+-    input[type="radio"] {
+-      transform:translateY(1px);
+-      margin-right:4px;
+-    }
+     .row {
+       display:flex;
+       gap:8px;
+       margin-bottom:8px;
+     }
+     .row > div { flex:1; }
+ 
+     .btn {
+       display:inline-flex;
+       align-items:center;
+       justify-content:center;
+       padding:8px 12px;
+       border-radius:999px;
+       border:none;
+       cursor:pointer;
+       font-size:0.9rem;
+       font-weight:600;
+       transition:transform 0.06s ease, box-shadow 0.06s ease, background 0.1s;
+       white-space:nowrap;
+     }
+     .btn-primary {
+       background:linear-gradient(135deg,#8CAF0B,#a9d51a);
+       color:#111827;
+       box-shadow:0 10px 25px rgba(140,175,11,0.45);
+     }
+@@ -461,74 +457,104 @@
+     .log-toggle-btn {
+       border-radius:999px;
+       border:1px solid #3f3f46;
+       background:#111111;
+       color:#e5e7eb;
+       font-size:0.75rem;
+       padding:2px 8px;
+       cursor:pointer;
+     }
+     .log-toggle-btn:hover {
+       background:#1f1f1f;
      }
  
-     async function fetchItemEquipment(ocid, apiKey, dateStr) {
-       const qOcid = encodeURIComponent(ocid);
-       const qDate = encodeURIComponent(dateStr);
-       return nxFetch(`/character/item-equipment?ocid=${qOcid}&date=${qDate}`, apiKey);
+     #card-settings,
+     #card-options,
+     #card-stats,
+     #card-log {
+       width:100%;
      }
  
-     function normalizeNxEquipItems(raw, presetNo) {
-       if (!raw) return [];
--      const list = raw.item_equipment || [];
-+      const presetKey = presetNo ? `item_equipment_preset_${presetNo}` : null;
-+      const presetList = presetKey ? raw[presetKey] : null;
-+      const usePresetList = Array.isArray(presetList) && presetList.length > 0;
-+      const list = usePresetList ? presetList : (raw.item_equipment || []);
-       const out = [];
-       list.forEach((it, idx) => {
-         // preset: item_equipment_preset_no 값이 있는 경우만 필터
-         const pno = it.item_equipment_preset_no;
--        if (presetNo && pno && String(pno) !== String(presetNo)) return;
-+        if (!usePresetList && presetNo && pno && String(pno) !== String(presetNo)) return;
+     .cube-kind-option.disabled {
+       color:#6b7280;
+       opacity:0.55;
+     }
+     .cube-kind-option {
+-      display:flex;
+-      align-items:flex-start;
+-      gap:6px;
++      display:inline-flex;
++      align-items:center;
++      gap:0;
+       line-height:1.2;
++      cursor:pointer;
++      position:relative;
+     }
+     .cube-kind-option input[type="radio"] {
+-      margin-top:2px;
++      position:absolute;
++      opacity:0;
++      pointer-events:none;
+     }
  
-         const partName = it.item_equipment_part || "";
-         const slotName = it.item_equipment_slot || "";
-         const slotNo = it.item_equipment_slot_no ?? it.item_equipment_slot;
-         const partsType = resolvePartsType(partName, slotName, slotNo, it.item_name);
+     .main-stat-grid {
+       display:grid;
+       grid-template-columns:repeat(2, minmax(0,1fr));
+       gap:6px 10px;
+       margin-top:4px;
+     }
+     .main-stat-grid label {
+       margin-bottom:0;
+-      display:flex;
+-      align-items:flex-start;
+-      gap:6px;
++      display:inline-flex;
++      align-items:center;
++      gap:0;
+       line-height:1.2;
++      cursor:pointer;
++      position:relative;
+     }
++    .main-stat-grid label input[type="radio"] {
++      position:absolute;
++      opacity:0;
++      pointer-events:none;
++    }
++    .cube-kind-option span,
+     .main-stat-grid label span {
+-      display:block;
++      display:inline-flex;
++      align-items:center;
++      padding:4px 10px;
++      border-radius:999px;
++      border:1px solid #3f3f46;
++      background:#111111;
++      color:#e5e7eb;
++      transition:background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
++    }
++    .cube-kind-option input[type="radio"]:checked + span,
++    .main-stat-grid label input[type="radio"]:checked + span {
++      background:#1f2a10;
++      border-color:#8CAF0B;
++      color:#f3f4f6;
++    }
++    .cube-kind-option input[type="radio"]:focus-visible + span,
++    .main-stat-grid label input[type="radio"]:focus-visible + span {
++      outline:2px solid #8CAF0B;
++      outline-offset:2px;
+     }
  
-         const mainGrade = it.potential_option_grade ?? null;
-         const addGrade  = it.additional_potential_option_grade ?? null;
- 
-         const key = `${partName}|${it.item_name}|${it.item_equipment_slot || ""}|${idx}`;
- 
-         out.push({
-           key,
-           idx,
-           item_name: it.item_name,
-           partName,
-           partsType,
-           reqLev: it.item_base_option?.base_equipment_level ?? it.item_base_option?.base_req_level ?? it.item_description?.req_lev ?? it.item_equipment_req_level ?? it.item_equipment_level ?? it.item_equipment_req_lev ?? it.item_equipment_reqlev ?? it.item_req_lev ?? it.item_equipment_req ?? it.item_equipment_req_level ?? it.item_equipment_req_lev, // defensive
-           // most reliable in your sample: item_equipment_req_level
-           reqLev2: it.item_equipment_req_level,
-           mainGrade,
-           addGrade,
-           mainLines: [it.potential_option_1, it.potential_option_2, it.potential_option_3].filter(Boolean),
-           addLines: [it.additional_potential_option_1, it.additional_potential_option_2, it.additional_potential_option_3].filter(Boolean),
-         });
+     .auto-help {
+       margin:4px 0 6px;
+       font-size:0.8rem;
+       color:#a1a1aa;
+     }
+     .auto-help summary {
+       cursor:pointer;
+       list-style:none;
+       color:#e5e7eb;
+       font-weight:600;
+       display:inline-flex;
+       align-items:center;
+       gap:6px;
+       padding:4px 10px;
+       border:1px solid #3f3f46;
+       border-radius:8px;
+       background:#363636;
+       transition:border-color 0.2s ease, background 0.2s ease;
+     }
+     .auto-help summary::marker {
+       display:none;
+     }
+     .auto-help summary::after {
