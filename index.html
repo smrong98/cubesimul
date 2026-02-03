@@ -144,6 +144,10 @@
       padding:6px 10px;
       font-size:0.8rem;
     }
+    .btn-inline {
+      height:34px;
+      padding:6px 12px;
+    }
     .btn-api {
       flex:1;
     }
@@ -156,11 +160,13 @@
       border:1px solid #3f3f46;
       box-shadow:none;
     }
-    .btn-toggle.is-active {
-      background:linear-gradient(135deg,#8CAF0B,#a9d51a);
-      color:#111827;
-      border-color:transparent;
-      box-shadow:0 10px 25px rgba(140,175,11,0.45);
+    .btn-toggle::before {
+      content:"✓";
+      display:inline-block;
+      width:1em;
+      margin-right:4px;
+      color:#8CAF0B;
+      opacity:0;
     }
     .btn-danger {
       background:linear-gradient(135deg,#ef4444,#f87171);
@@ -486,11 +492,55 @@
     .condition-actions {
       margin-top:10px;
       display:flex;
-      justify-content:space-between;
+      justify-content:flex-start;
       gap:8px;
     }
-    .condition-actions .btn {
-      flex:0 0 33%;
+    .condition-actions .btn-reset {
+      flex:0 0 12.5%;
+      min-width:72px;
+    }
+    .condition-actions .btn-apply {
+      flex:0 0 50%;
+      margin-left:auto;
+    }
+    .my-equip-action-row {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-bottom:6px;
+      flex-wrap:wrap;
+    }
+    .my-equip-action-row .btn {
+      width:auto;
+      height:34px;
+    }
+    .my-equip-name-row {
+      display:flex;
+      align-items:flex-end;
+      gap:8px;
+    }
+    .my-equip-name-row > div {
+      flex:1;
+    }
+    .my-equip-name-row .name-input {
+      flex:1;
+      max-width:calc(50% - 4px);
+    }
+    .my-equip-name-row .name-action {
+      flex:0 0 auto;
+    }
+    .my-equip-name-row .btn {
+      height:34px;
+    }
+    .btn-toggle.is-active {
+      background:#1f2a10;
+      color:#e5e7eb;
+      border-color:#8CAF0B;
+      box-shadow:none;
+    }
+    .btn-toggle.is-active::before {
+      opacity:1;
+      font-weight:700;
     }
   </style>
     <!-- Google tag (gtag.js) -->
@@ -519,14 +569,10 @@
 
         <!-- 내 장비 불러오기 (Nexon Open API) -->
         <div style="margin-top:10px;">
-          <div class="row" style="margin-bottom:6px;">
-            <div>
-              <button type="button" class="btn btn-toggle btn-block" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
-              <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
-            </div>
-            <div>
-              <button type="button" class="btn btn-secondary btn-block" id="clearApiKeyBtn">저장된 키 삭제</button>
-            </div>
+          <div class="my-equip-action-row">
+            <button type="button" class="btn btn-toggle" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
+            <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
+            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
           </div>
 
           <div id="myEquipPanel" class="my-equip-panel" style="display:none;">
@@ -535,14 +581,14 @@
               <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
             </div>
             <div id="myEquipNameArea" class="my-equip-step">
-              <div class="row">
-                <div>
+              <div class="my-equip-name-row">
+                <div class="name-input">
                   <label for="characterName">캐릭터 닉네임</label>
                   <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                 </div>
-                <div>
+                <div class="name-action">
                   <label class="visually-hidden" for="fetchMyEquipBtn">장비 불러오기</label>
-                  <button type="button" class="btn btn-primary btn-block btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
+                  <button type="button" class="btn btn-primary btn-no-glow btn-compact btn-inline" id="fetchMyEquipBtn">장비 불러오기</button>
                 </div>
               </div>
               <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
@@ -568,9 +614,9 @@
             <div class="row" style="margin-top:6px;">
               <div>
                 <label>자동 설정</label>
-                <div style="font-size:0.85rem; color:#e5e7eb;">
-                  <div style="margin-top:4px;">시작 옵션: <span style="color:#a1a1aa;">선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
-                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint" style="color:#a1a1aa;">-</span></div>
+                <div style="font-size:0.85rem; color:#a1a1aa;">
+                  <div style="margin-top:4px;">시작 옵션: <span>선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
+                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint">-</span></div>
                 </div>
               </div>
             </div>
@@ -782,8 +828,8 @@
       </div>
 
       <div class="condition-actions">
-        <button class="btn btn-danger" id="conditionResetBtn">조건 초기화</button>
-        <button class="btn btn-secondary" id="applyResetBtn">조건 적용</button>
+        <button class="btn btn-danger btn-reset" id="conditionResetBtn">조건 초기화</button>
+        <button class="btn btn-secondary btn-apply" id="applyResetBtn">조건 적용</button>
       </div>
       </section>
 
