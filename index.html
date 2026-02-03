@@ -517,7 +517,7 @@
     .auto-help summary {
       cursor:pointer;
       list-style:none;
-      color:#cbd5f5;
+      color:#a1a1aa;
       font-weight:600;
     }
     .auto-help summary::marker {
@@ -622,7 +622,7 @@
         <!-- 내 장비 불러오기 (Nexon Open API) -->
         <div style="margin-top:10px;">
           <div class="my-equip-action-row">
-            <button type="button" class="btn btn-toggle btn-scale-three-quarters" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
+            <button type="button" class="btn btn-toggle btn-scale-three-quarters" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API)</button>
             <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
             <button type="button" class="btn btn-secondary btn-scale-half btn-scale-half-vertical" id="clearApiKeyBtn">저장된 키 삭제</button>
           </div>
@@ -667,8 +667,8 @@
               <div>
                 <label>자동 설정</label>
                 <div style="font-size:0.85rem; color:#a1a1aa;">
-                  <div style="margin-top:4px;">시작 옵션: <span>선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
-                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint">-</span></div>
+                  <div style="margin-top:4px;">시작 옵션: <span>선택한 아이템의 현재 잠재</span></div>
+                  <div style="margin-top:4px;">장비 정보: <span id="myEquipSideHint">-</span></div>
                 </div>
               </div>
             </div>
