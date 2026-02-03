@@ -1,8 +1,21 @@
 diff --git a/index.html b/index.html
-index 885ffb86d3f95116a2e2aa84e394d1ca84a19a03..3d70859ff69d88366aff8eb6e8a664dafc6ebb73 100644
+index 6c66cef60cc572198bc13953aa55440624207b4b..693dc63c9c743552b5f3f4e040c63dd7826a1241 100644
 --- a/index.html
 +++ b/index.html
-@@ -524,51 +524,57 @@
+@@ -511,50 +511,56 @@
+ 
+     .auto-help {
+       margin:4px 0 6px;
+       font-size:0.8rem;
+       color:#a1a1aa;
+     }
+     .auto-help summary {
+       cursor:pointer;
+       list-style:none;
+       color:#cbd5f5;
+       font-weight:600;
+     }
+     .auto-help summary::marker {
        display:none;
      }
      .condition-actions {
@@ -15,6 +28,12 @@ index 885ffb86d3f95116a2e2aa84e394d1ca84a19a03..3d70859ff69d88366aff8eb6e8a664da
        flex:0 0 15%;
        min-width:86px;
      }
++    .condition-actions .btn-reset.btn-danger {
++      box-shadow:none;
++    }
++    .condition-actions .btn-reset.btn-danger:active {
++      box-shadow:none;
++    }
      .condition-actions .btn-apply {
        flex:0 0 50%;
        margin-left:auto;
@@ -28,36 +47,327 @@ index 885ffb86d3f95116a2e2aa84e394d1ca84a19a03..3d70859ff69d88366aff8eb6e8a664da
      }
      .my-equip-action-row .btn {
        width:auto;
--      height:34px;
-+      height:25px;
-+    }
-+    #clearApiKeyBtn {
-+      height:20px;
-+    }
-+    #fetchMyEquipBtn {
-+      height:23px;
+       height:25px;
+     }
+     #clearApiKeyBtn {
+       height:20px;
+     }
+     #fetchMyEquipBtn {
+       height:30px;
      }
      .my-equip-name-row {
        display:flex;
        align-items:flex-end;
        gap:8px;
+@@ -1020,85 +1026,111 @@
+       const slotNumeric = Number(slotNo ?? normalizedSlot);
+       if (Number.isFinite(slotNumeric) && slotNumeric >= 1 && slotNumeric <= 20) {
+         return slotNumeric;
+       }
+ 
+       return null;
      }
-     .my-equip-name-row > div {
-       flex:1;
+ 
+     function isLegendary(grade) {
+       return grade === "레전드리";
      }
-     .my-equip-name-row .name-input {
-       flex:1;
-       max-width:calc(50% - 4px);
+ 
+     function getGradeInitial(grade) {
+       if (!grade) return "-";
+       const trimmed = String(grade).trim();
+       return trimmed ? trimmed.charAt(0) : "-";
      }
-     .my-equip-name-row .name-action {
-       flex:0 0 auto;
+ 
+     function formatDateYYYYMMDD(d) {
+       const y = d.getFullYear();
+       const m = String(d.getMonth() + 1).padStart(2, "0");
+       const day = String(d.getDate()).padStart(2, "0");
+       return `${y}-${m}-${day}`;
      }
-     .my-equip-name-row .btn {
-       height:34px;
+ 
++    function shiftDateStrByDays(dateStr, days) {
++      const [y, m, d] = String(dateStr || "").split("-").map(Number);
++      if (!y || !m || !d) return dateStr;
++      const date = new Date(y, m - 1, d);
++      date.setDate(date.getDate() + days);
++      return formatDateYYYYMMDD(date);
++    }
++
+     function getDefaultNxDate() {
+       // Open API는 지연이 있을 수 있어 기본은 전일
+       const d = new Date();
+       d.setDate(d.getDate() - 1);
+       return formatDateYYYYMMDD(d);
      }
-     .btn-toggle.is-active {
-       background:#1f2a10;
-       color:#e5e7eb;
-       border-color:#8CAF0B;
-       box-shadow:none;
+ 
+     function setMyEquipStatus(text, isError=false) {
+       const el = document.getElementById("myEquipStatus");
+       if (!el) return;
+       el.textContent = text || "";
+       el.style.color = isError ? "#fca5a5" : "#a1a1aa";
      }
+ 
+     function setControlsDisabledByMyEquipMode(disabled) {
+       const itemLevel = document.getElementById("itemLevel");
+       const partsType = document.getElementById("partsType");
+       if (itemLevel) itemLevel.disabled = disabled;
+       if (partsType) partsType.disabled = disabled;
+     }
+ 
+     function getSelectedCubeKind() {
+       return document.querySelector('input[name="cubeKind"]:checked')?.value || "black";
+     }
+ 
+     function setCubeKind(kind) {
+       const r = document.querySelector(`input[name="cubeKind"][value="${kind}"]`);
+       if (r) r.checked = true;
+       updateCubeTag();
+     }
+ 
+     function getSideFromCubeKind(kind) {
+       return kind === "addi" ? "addi" : "main";
+     }
+ 
++    function isLatin1String(value) {
++      for (const ch of value) {
++        if (ch.codePointAt(0) > 0xff) return false;
++      }
++      return true;
++    }
++
++    function validateApiKeyInput(apiKey) {
++      if (!apiKey) return { ok: false, message: "API Key를 입력하세요." };
++      if (/[\r\n]/.test(apiKey)) {
++        return { ok: false, message: "API Key에 줄바꿈이 포함되어 있습니다. 다시 복사해 주세요." };
++      }
++      if (!isLatin1String(apiKey)) {
++        return { ok: false, message: "API Key에 지원하지 않는 문자가 포함되어 있습니다. 영문/숫자 키만 입력해 주세요." };
++      }
++      return { ok: true, message: "" };
++    }
++
+     async function nxFetch(path, apiKey) {
+       const res = await fetch(`${NX_BASE}${path}`, {
+         headers: { "x-nxopen-api-key": apiKey }
+       });
+       if (!res.ok) {
+         const t = await res.text().catch(() => "");
+         throw new Error(`HTTP ${res.status} ${res.statusText}${t ? " - " + t : ""}`);
+       }
+       return res.json();
+     }
+ 
+     async function fetchOcidByName(name, apiKey) {
+       const q = encodeURIComponent(name.trim());
+       return nxFetch(`/id?character_name=${q}`, apiKey);
+     }
+ 
+     async function fetchItemEquipment(ocid, apiKey, dateStr) {
+       const qOcid = encodeURIComponent(ocid);
+       const qDate = encodeURIComponent(dateStr);
+       return nxFetch(`/character/item-equipment?ocid=${qOcid}&date=${qDate}`, apiKey);
+     }
+ 
+     function normalizeNxEquipItems(raw, presetNo) {
+       if (!raw) return [];
+       const list = raw.item_equipment || [];
+@@ -1236,50 +1268,65 @@
+       let max = 0;
+       Object.values(counts).forEach(val => {
+         if (val > max) max = val;
+       });
+       if (!max) return null;
+ 
+       const winners = Object.entries(counts).filter(([, val]) => val === max);
+       if (winners.length !== 1) return null;
+       return winners[0][0];
+     }
+ 
+     function applyMainStatSelection(stat) {
+       if (!stat) return;
+       const radio = document.querySelector(`input[name="mainStat"][value="${stat}"]`);
+       if (radio) {
+         radio.checked = true;
+         saveCurrentSettings();
+       }
+     }
+ 
+     function isSideLegendary(equip, side) {
+       if (!equip) return false;
+       return side === "addi" ? isLegendary(equip.addGrade) : isLegendary(equip.mainGrade);
+     }
+ 
++    function applyAutoCubeKindForEquip(equip) {
++      if (!equip) return;
++      const mainOk = isSideLegendary(equip, "main");
++      const addOk = isSideLegendary(equip, "addi");
++      if (mainOk) {
++        if (getSelectedCubeKind() === "addi") {
++          setCubeKind("black");
++        }
++        return;
++      }
++      if (addOk) {
++        setCubeKind("addi");
++      }
++    }
++
+     function ensureValidCubeKindForEquip(equip) {
+       if (!equip) return;
+       const currentKind = getSelectedCubeKind();
+       const mainOk = isSideLegendary(equip, "main");
+       const addOk = isSideLegendary(equip, "addi");
+ 
+       if (currentKind === "addi") {
+         if (!addOk && mainOk) {
+           setCubeKind("black");
+         }
+       } else {
+         if (!mainOk && addOk) {
+           setCubeKind("addi");
+         }
+       }
+     }
+ 
+     function getEquipLinesForCubeKind(equip, cubeKind) {
+       const side = getSideFromCubeKind(cubeKind);
+       return side === "addi" ? equip.addLines : equip.mainLines;
+     }
+ 
+     function detectMainStatFromEquipList(equipList, cubeKind) {
+       const counts = { STR: 0, DEX: 0, INT: 0, LUK: 0, ALLSTAT: 0 };
+       if (!Array.isArray(equipList) || !equipList.length) return null;
+@@ -2124,64 +2171,77 @@
+           updateApiKeyUI();
+           syncToggleUI();
+         });
+       }
+ 
+       if (toggle) {
+         toggle.addEventListener("change", () => {
+           setMode(toggle.checked);
+           updateApiKeyUI();
+           syncToggleUI();
+         });
+       }
+ 
+       if (clearBtn) {
+         clearBtn.addEventListener("click", () => {
+           localStorage.removeItem(NX_API_STORAGE_KEY);
+           if (apiInput) apiInput.value = "";
+           updateApiKeyUI();
+           setMyEquipStatus("저장된 키를 삭제했습니다.");
+         });
+       }
+ 
+       async function doFetchEquip() {
+         const apiKey = (apiInput?.value || localStorage.getItem(NX_API_STORAGE_KEY) || "").trim();
+         const name = (nameInput?.value || "").trim();
+-        if (!apiKey) { alert("API Key를 입력하세요."); return; }
++        const apiKeyCheck = validateApiKeyInput(apiKey);
++        if (!apiKeyCheck.ok) { alert(apiKeyCheck.message); return; }
+         if (!name) { alert("닉네임을 입력하세요."); return; }
+ 
+         setMyEquipStatus("OCID 조회 중...");
+         fetchBtn.disabled = true;
+ 
+         try {
+           const ocidRes = await fetchOcidByName(name, apiKey);
+           const ocid = ocidRes?.ocid;
+           if (!ocid) throw new Error("OCID를 찾지 못했습니다.");
+ 
+           const dateStr = getDefaultNxDate();
+           setMyEquipStatus(`장비 조회 중... (기준일자: ${dateStr})`);
+-          const equipRes = await fetchItemEquipment(ocid, apiKey, dateStr);
++          let equipRes;
++          try {
++            equipRes = await fetchItemEquipment(ocid, apiKey, dateStr);
++          } catch (err) {
++            const errMsg = err?.message || String(err || "");
++            if (errMsg.includes("OPENAPI00009")) {
++              const fallbackDate = shiftDateStrByDays(dateStr, -1);
++              setMyEquipStatus(`데이터 준비 중. 전일 기준으로 재시도... (${fallbackDate})`);
++              equipRes = await fetchItemEquipment(ocid, apiKey, fallbackDate);
++            } else {
++              throw err;
++            }
++          }
+           nxEquipRaw = equipRes;
+ 
+           // 저장(성공 시)
+           localStorage.setItem(NX_API_STORAGE_KEY, apiKey);
+           if (apiInput) apiInput.value = apiKey;
+           updateApiKeyUI();
+ 
+           // preset 반영
+           const presetNo = presetSel?.value || "1";
+           nxEquipItems = normalizeNxEquipItems(nxEquipRaw, presetNo);
+ 
+           // item_equipment_preset_# 값이 없는 응답이면 위 필터로 다 비게 될 수 있으니 fallback
+           if (!nxEquipItems.length) {
+             nxEquipItems = normalizeNxEquipItems(nxEquipRaw, null);
+           }
+ 
+           renderMyEquipSelect();
+           resetAutoConditionDefaults();
+           setMyEquipStatus(`불러오기 완료: ${nxEquipItems.length}개 장비`);
+ 
+           const detectedStat = detectMainStatFromEquipList(nxEquipItems, getSelectedCubeKind());
+           applyMainStatSelection(detectedStat);
+ 
+           // my mode에서 레벨/부위 선택 잠그기(아이템 선택 후)
+           setControlsDisabledByMyEquipMode(true);
+@@ -2209,51 +2269,52 @@
+           updateApiKeyUI();
+         });
+       }
+ 
+       if (presetSel) {
+         presetSel.addEventListener("change", () => {
+           if (!nxEquipRaw) return;
+           const presetNo = presetSel.value;
+           nxEquipItems = normalizeNxEquipItems(nxEquipRaw, presetNo);
+           if (!nxEquipItems.length) nxEquipItems = normalizeNxEquipItems(nxEquipRaw, null);
+           selectedEquipKey = "";
+           renderMyEquipSelect();
+           updateMyEquipSideUI(null);
+           window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
+         });
+       }
+ 
+       if (equipSel) {
+         equipSel.addEventListener("change", () => {
+           selectedEquipKey = equipSel.value;
+           const eq = getSelectedNxEquip();
+           updateMyEquipSideUI(eq);
+ 
+           if (!eq) return;
+ 
+-          // 기본 side가 레전더리인지 확인 후 적용
++          // 장비 종류에 맞춰 자동 돌리기 설정(큐브 종류) 자동 선택
++          applyAutoCubeKindForEquip(eq);
+           ensureValidCubeKindForEquip(eq);
+           updateCubeKindAvailability(eq);
+           applyNxEquipToSimulator(eq);
+           window.dispatchEvent(new Event("cubeSim:refreshAutoPanel"));
+         });
+       }
+ 
+       // 초기 토글 상태
+       setPanelVisible(false);
+       updateApiKeyUI();
+       syncToggleUI();
+     }
+ 
+ const storedSettings = getStoredSettings();
+     applyStoredSettings(storedSettings);
+     updateCubeTag();
+     updateLogVisibility();
+     initMyEquipUI();
+ 
+     // ====== 업데이트 내역 토글 ======
+     window.addEventListener("load", () => {
+       const box = document.getElementById("changelog");
+       const btn = document.getElementById("toggleChangelogBtn");
+       if (!box || !btn) return;
+ 
