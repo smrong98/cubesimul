@@ -147,6 +147,26 @@
     .btn-api {
       flex:1;
     }
+    .btn-block {
+      width:100%;
+    }
+    .btn-toggle {
+      background:#27272a;
+      color:#e5e7eb;
+      border:1px solid #3f3f46;
+      box-shadow:none;
+    }
+    .btn-toggle.is-active {
+      background:linear-gradient(135deg,#8CAF0B,#a9d51a);
+      color:#111827;
+      border-color:transparent;
+      box-shadow:0 10px 25px rgba(140,175,11,0.45);
+    }
+    .btn-danger {
+      background:linear-gradient(135deg,#ef4444,#f87171);
+      color:#111827;
+      box-shadow:0 10px 24px rgba(239,68,68,0.35);
+    }
     .api-button-row {
       display:flex;
       gap:8px;
@@ -158,6 +178,17 @@
       align-items:center;
       justify-content:space-between;
       gap:8px;
+    }
+    .visually-hidden {
+      position:absolute;
+      width:1px;
+      height:1px;
+      padding:0;
+      margin:-1px;
+      overflow:hidden;
+      clip:rect(0, 0, 0, 0);
+      white-space:nowrap;
+      border:0;
     }
     .my-equip-panel {
       margin-top:8px;
@@ -424,8 +455,8 @@
     .main-stat-grid {
       display:grid;
       grid-template-columns:repeat(2, minmax(0,1fr));
-      gap:2px 10px;
-      margin-top:2px;
+      gap:6px 10px;
+      margin-top:4px;
     }
     .main-stat-grid label {
       margin-bottom:0;
@@ -451,6 +482,15 @@
     }
     .auto-help summary::marker {
       display:none;
+    }
+    .condition-actions {
+      margin-top:10px;
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+    }
+    .condition-actions .btn {
+      flex:0 0 33%;
     }
   </style>
     <!-- Google tag (gtag.js) -->
@@ -478,13 +518,15 @@
         <h2>설정</h2>
 
         <!-- 내 장비 불러오기 (Nexon Open API) -->
-        <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #2d2d2d;">
-          <div class="my-equip-toggle-row">
-            <label style="margin-bottom:6px; font-size:0.9rem;">
-              <input type="checkbox" id="useMyEquipToggle" />
-              내 장비 불러오기 (API Key 필요)
-            </label>
-            <button type="button" class="btn btn-secondary btn-compact" id="clearApiKeyBtn">저장된 키 삭제</button>
+        <div style="margin-top:10px;">
+          <div class="row" style="margin-bottom:6px;">
+            <div>
+              <button type="button" class="btn btn-toggle btn-block" id="useMyEquipToggleBtn" aria-pressed="false">내 장비 불러오기 (API Key 필요)</button>
+              <input type="checkbox" id="useMyEquipToggle" class="visually-hidden" />
+            </div>
+            <div>
+              <button type="button" class="btn btn-secondary btn-block" id="clearApiKeyBtn">저장된 키 삭제</button>
+            </div>
           </div>
 
           <div id="myEquipPanel" class="my-equip-panel" style="display:none;">
@@ -493,10 +535,15 @@
               <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
             </div>
             <div id="myEquipNameArea" class="my-equip-step">
-              <label for="characterName">캐릭터 닉네임</label>
-              <div class="my-equip-fetch-row">
-                <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
-                <button type="button" class="btn btn-primary btn-compact btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
+              <div class="row">
+                <div>
+                  <label for="characterName">캐릭터 닉네임</label>
+                  <input id="characterName" type="text" placeholder="닉네임" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
+                </div>
+                <div>
+                  <label class="visually-hidden" for="fetchMyEquipBtn">장비 불러오기</label>
+                  <button type="button" class="btn btn-primary btn-block btn-no-glow" id="fetchMyEquipBtn">장비 불러오기</button>
+                </div>
               </div>
               <div id="myEquipStatus" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
             </div>
@@ -734,9 +781,9 @@
         </div>
       </div>
 
-      <div style="margin-top:10px; display:flex; gap:8px;">
-        <button class="btn btn-secondary" id="applyResetBtn" style="flex:1;">조건 적용</button>
-        <button class="btn btn-secondary" id="conditionResetBtn" style="flex:1;">조건 초기화</button>
+      <div class="condition-actions">
+        <button class="btn btn-danger" id="conditionResetBtn">조건 초기화</button>
+        <button class="btn btn-secondary" id="applyResetBtn">조건 적용</button>
       </div>
       </section>
 
@@ -1914,6 +1961,7 @@
     // ====== 내 장비 불러오기 UI 바인딩 ======
     function initMyEquipUI() {
       const toggle = document.getElementById("useMyEquipToggle");
+      const toggleBtn = document.getElementById("useMyEquipToggleBtn");
       const panel = document.getElementById("myEquipPanel");
       const apiInput = document.getElementById("nxApiKey");
       const apiInputWrap = document.getElementById("apiKeyInputWrap");
@@ -1964,10 +2012,27 @@
         }
       }
 
+      function syncToggleUI() {
+        if (!toggleBtn || !toggle) return;
+        const active = toggle.checked;
+        toggleBtn.classList.toggle("is-active", active);
+        toggleBtn.setAttribute("aria-pressed", String(active));
+      }
+
+      if (toggleBtn && toggle) {
+        toggleBtn.addEventListener("click", () => {
+          toggle.checked = !toggle.checked;
+          setMode(toggle.checked);
+          updateApiKeyUI();
+          syncToggleUI();
+        });
+      }
+
       if (toggle) {
         toggle.addEventListener("change", () => {
           setMode(toggle.checked);
           updateApiKeyUI();
+          syncToggleUI();
         });
       }
 
@@ -2079,6 +2144,7 @@
       // 초기 토글 상태
       setPanelVisible(false);
       updateApiKeyUI();
+      syncToggleUI();
     }
 
 const storedSettings = getStoredSettings();
