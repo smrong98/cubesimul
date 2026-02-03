@@ -400,12 +400,7 @@
                 <label for="nxApiKey">Nexon Open API Key</label>
                 <input id="nxApiKey" type="password" placeholder="x-nxopen-api-key" style="width:100%; padding:6px 8px; border-radius:8px; border:1px solid #3f3f46; background:#111111; color:#e5e7eb; font-size:0.9rem;" />
                 <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
-                  <label style="margin:0; font-size:0.8rem; color:#a1a1aa;">
-                    <input type="checkbox" id="saveApiKeyToggle" checked />
-                    API Key 로컬 저장
-                  </label>
                   <button type="button" class="btn btn-secondary" id="clearApiKeyBtn" style="padding:6px 10px; font-size:0.8rem;">저장된 키 삭제</button>
-                  <button type="button" class="btn btn-secondary" id="toggleApiKeyViewBtn" style="padding:6px 10px; font-size:0.8rem;">보기</button>
                 </div>
               </div>
               <div>
@@ -428,7 +423,7 @@
                 </select>
               </div>
               <div>
-                <label for="myEquipSelect">내 장비 선택 (레전더리만 시뮬 가능)</label>
+                <label for="myEquipSelect">장비 선택 (레전만 가능)</label>
                 <select id="myEquipSelect" disabled>
                   <option value="">(먼저 장비를 불러오세요)</option>
                 </select>
@@ -437,16 +432,11 @@
 
             <div class="row" style="margin-top:6px;">
               <div>
-                <label>시뮬 대상</label>
-                <label><input type="radio" name="myEquipSide" value="main" checked />윗잠 (레전더리만)</label>
-                <label><input type="radio" name="myEquipSide" value="addi" />아랫잠 (레전더리만)</label>
-                <div id="myEquipSideHint" style="margin-top:6px; font-size:0.8rem; color:#a1a1aa;"></div>
-              </div>
-              <div>
                 <label>자동 설정</label>
                 <div style="font-size:0.85rem; color:#e5e7eb;">
                   <div>부위/레벨: <span id="myEquipAutoPartLevel" style="color:#a1a1aa;">-</span></div>
                   <div style="margin-top:4px;">시작 옵션: <span style="color:#a1a1aa;">선택한 아이템의 잠재로 현재 옵션이 설정됩니다</span></div>
+                  <div style="margin-top:4px;">잠재 상태: <span id="myEquipSideHint" style="color:#a1a1aa;">-</span></div>
                 </div>
               </div>
             </div>
@@ -734,7 +724,6 @@
     let nxEquipRaw = null;     // item-equipment raw response
     let nxEquipItems = [];     // normalized list for current preset
     let selectedEquipKey = "";
-    let selectedEquipSide = "main"; // "main" | "addi"
 
     const PART_TO_PARTSTYPE = {
       "무기": 1,
@@ -792,20 +781,18 @@
       if (partsType) partsType.disabled = disabled;
     }
 
-    function setCubeKindForSide(side) {
-      // side: "main" => black/meister 유지, "addi" => addi 강제
-      if (side === "addi") {
-        const r = document.querySelector('input[name="cubeKind"][value="addi"]');
-        if (r) r.checked = true;
-      } else {
-        // 기본은 black. 사용자가 meister로 바꾸는 건 허용
-        const current = document.querySelector('input[name="cubeKind"]:checked')?.value;
-        if (current === "addi") {
-          const r = document.querySelector('input[name="cubeKind"][value="black"]');
-          if (r) r.checked = true;
-        }
-      }
+    function getSelectedCubeKind() {
+      return document.querySelector('input[name="cubeKind"]:checked')?.value || "black";
+    }
+
+    function setCubeKind(kind) {
+      const r = document.querySelector(`input[name="cubeKind"][value="${kind}"]`);
+      if (r) r.checked = true;
       updateCubeTag();
+    }
+
+    function getSideFromCubeKind(kind) {
+      return kind === "addi" ? "addi" : "main";
     }
 
     async function nxFetch(path, apiKey) {
@@ -918,14 +905,6 @@
 
     function updateMyEquipSideUI(equip) {
       const hint = document.getElementById("myEquipSideHint");
-      const mainRadio = document.querySelector('input[name="myEquipSide"][value="main"]');
-      const addiRadio = document.querySelector('input[name="myEquipSide"][value="addi"]');
-
-      const mainOk = equip && isLegendary(equip.mainGrade);
-      const addOk  = equip && isLegendary(equip.addGrade);
-
-      if (mainRadio) mainRadio.disabled = !mainOk;
-      if (addiRadio) addiRadio.disabled = !addOk;
 
       if (!equip) {
         if (hint) hint.textContent = "";
@@ -936,15 +915,70 @@
       const lvLabel = equip.reqLev ? `Lv.${equip.reqLev}` : "-";
       const info = `${partsLabel} / ${lvLabel} | 윗:${equip.mainGrade ?? "-"} / 아랫:${equip.addGrade ?? "-"}`;
       if (hint) hint.textContent = info;
+    }
 
-      // 현재 선택 side가 불가능하면 가능한 쪽으로 자동 이동
-      if (selectedEquipSide === "main" && !mainOk && addOk) {
-        selectedEquipSide = "addi";
-        if (addiRadio) addiRadio.checked = true;
-      } else if (selectedEquipSide === "addi" && !addOk && mainOk) {
-        selectedEquipSide = "main";
-        if (mainRadio) mainRadio.checked = true;
+    function normalizeStatText(text) {
+      return (text || "").replace(/\s+/g, "");
+    }
+
+    function detectMainStatFromLines(lines) {
+      const counts = { STR: 0, DEX: 0, INT: 0, LUK: 0, ALLSTAT: 0 };
+      if (!Array.isArray(lines)) return null;
+      lines.forEach(line => {
+        const text = normalizeStatText(line);
+        if (!text) return;
+        if (text.includes("올스탯")) counts.ALLSTAT += 1;
+        if (text.includes("STR") || text.includes("힘")) counts.STR += 1;
+        if (text.includes("DEX") || text.includes("민첩")) counts.DEX += 1;
+        if (text.includes("INT") || text.includes("지력")) counts.INT += 1;
+        if (text.includes("LUK") || text.includes("운")) counts.LUK += 1;
+      });
+
+      let max = 0;
+      Object.values(counts).forEach(val => {
+        if (val > max) max = val;
+      });
+      if (!max) return null;
+
+      const winners = Object.entries(counts).filter(([, val]) => val === max);
+      if (winners.length !== 1) return null;
+      return winners[0][0];
+    }
+
+    function applyMainStatSelection(stat) {
+      if (!stat) return;
+      const radio = document.querySelector(`input[name="mainStat"][value="${stat}"]`);
+      if (radio) {
+        radio.checked = true;
+        saveCurrentSettings();
       }
+    }
+
+    function isSideLegendary(equip, side) {
+      if (!equip) return false;
+      return side === "addi" ? isLegendary(equip.addGrade) : isLegendary(equip.mainGrade);
+    }
+
+    function ensureValidCubeKindForEquip(equip) {
+      if (!equip) return;
+      const currentKind = getSelectedCubeKind();
+      const mainOk = isSideLegendary(equip, "main");
+      const addOk = isSideLegendary(equip, "addi");
+
+      if (currentKind === "addi") {
+        if (!addOk && mainOk) {
+          setCubeKind("black");
+        }
+      } else {
+        if (!mainOk && addOk) {
+          setCubeKind("addi");
+        }
+      }
+    }
+
+    function getEquipLinesForCubeKind(equip, cubeKind) {
+      const side = getSideFromCubeKind(cubeKind);
+      return side === "addi" ? equip.addLines : equip.mainLines;
     }
 
     function applyNxEquipToSimulator(equip) {
@@ -977,13 +1011,14 @@
 
       // 표시
       const auto = document.getElementById("myEquipAutoPartLevel");
-      if (auto) auto.textContent = `${equip.partName} / Lv.${equip.reqLev} (시뮬 레벨: ${mapped})`;
+      if (auto) auto.textContent = `${equip.partName} / Lv.${equip.reqLev}`;
 
-      // 큐브 종류 강제(아랫잠이면 에디)
-      setCubeKindForSide(selectedEquipSide === "addi" ? "addi" : "main");
+      // 큐브 종류 유효성 보정
+      ensureValidCubeKindForEquip(equip);
 
       // 현재 옵션을 "내 장비 잠재"로 덮어쓰기
-      const linesText = (selectedEquipSide === "addi") ? equip.addLines : equip.mainLines;
+      const cubeKind = getSelectedCubeKind();
+      const linesText = getEquipLinesForCubeKind(equip, cubeKind);
       const lines = [];
       for (let i = 0; i < 3; i++) {
         const t = linesText[i] || "-";
@@ -1001,16 +1036,8 @@
       updateCubeTag();
       updateStatsTags();
       renderAllBoxes();
+      applyMainStatSelection(detectMainStatFromLines(linesText));
     }
-
-    function enforceLegendarySideOrWarn(equip, side) {
-      if (!equip) return false;
-      const grade = side === "addi" ? equip.addGrade : equip.mainGrade;
-      if (isLegendary(grade)) return true;
-      alert(`지원하지 않는 잠재 등급입니다 (${side === "addi" ? "아랫잠" : "윗잠"}: ${grade ?? "-"})`);
-      return false;
-    }
-
 
     let bcProbs = [];
     let wcProbs = [];
@@ -1578,7 +1605,13 @@
         rollCount = 0;
 
         updateCubeTag();
-        initCurrentOption();
+        const eq = useMyEquip ? getSelectedNxEquip() : null;
+        if (eq) {
+          ensureValidCubeKindForEquip(eq);
+          applyNxEquipToSimulator(eq);
+        } else {
+          initCurrentOption();
+        }
         saveCurrentSettings();
       });
     });
@@ -1635,9 +1668,7 @@
       const toggle = document.getElementById("useMyEquipToggle");
       const panel = document.getElementById("myEquipPanel");
       const apiInput = document.getElementById("nxApiKey");
-      const saveToggle = document.getElementById("saveApiKeyToggle");
       const clearBtn = document.getElementById("clearApiKeyBtn");
-      const viewBtn = document.getElementById("toggleApiKeyViewBtn");
       const nameInput = document.getElementById("characterName");
       const fetchBtn = document.getElementById("fetchMyEquipBtn");
       const presetSel = document.getElementById("equipPreset");
@@ -1662,6 +1693,7 @@
           selectedEquipKey = "";
           const auto = document.getElementById("myEquipAutoPartLevel");
           if (auto) auto.textContent = "-";
+          updateMyEquipSideUI(null);
           if (equipSel) {
             equipSel.innerHTML = "<option value=''> (먼저 장비를 불러오세요) </option>";
             equipSel.disabled = true;
@@ -1675,14 +1707,6 @@
       if (toggle) {
         toggle.addEventListener("change", () => {
           setMode(toggle.checked);
-        });
-      }
-
-      if (viewBtn && apiInput) {
-        viewBtn.addEventListener("click", () => {
-          const isPwd = apiInput.type === "password";
-          apiInput.type = isPwd ? "text" : "password";
-          viewBtn.textContent = isPwd ? "숨기기" : "보기";
         });
       }
 
@@ -1714,9 +1738,7 @@
           nxEquipRaw = equipRes;
 
           // 저장(성공 시)
-          if (saveToggle?.checked) {
-            localStorage.setItem(NX_API_STORAGE_KEY, apiKey);
-          }
+          localStorage.setItem(NX_API_STORAGE_KEY, apiKey);
 
           // preset 반영
           const presetNo = presetSel?.value || "1";
@@ -1766,30 +1788,10 @@
           if (!eq) return;
 
           // 기본 side가 레전더리인지 확인 후 적용
-          if (!enforceLegendarySideOrWarn(eq, selectedEquipSide)) {
-            // 가능한 쪽으로 자동 전환(updateMyEquipSideUI에서 처리)
-          }
+          ensureValidCubeKindForEquip(eq);
           applyNxEquipToSimulator(eq);
         });
       }
-
-      document.querySelectorAll('input[name="myEquipSide"]').forEach(r => {
-        r.addEventListener("change", () => {
-          selectedEquipSide = r.value === "addi" ? "addi" : "main";
-          const eq = getSelectedNxEquip();
-          if (!eq) return;
-
-          if (!enforceLegendarySideOrWarn(eq, selectedEquipSide)) {
-            // 롤백: 가능한 쪽으로
-            updateMyEquipSideUI(eq);
-            return;
-          }
-
-          // side에 따라 cubeKind도 함께 바꿈
-          setCubeKindForSide(selectedEquipSide === "addi" ? "addi" : "main");
-          applyNxEquipToSimulator(eq);
-        });
-      });
 
       // 초기 토글 상태
       setPanelVisible(false);
